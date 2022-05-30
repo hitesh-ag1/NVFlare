@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Copyright (c) 2021-2022, NVIDIA CORPORATION.  All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,11 +13,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+
 import argparse
+import sys
 import os
 import random
-import sys
-
 from nvflare.lighter.poc import prepare_poc as generate_poc
 
 
@@ -28,18 +29,17 @@ def prepare_poc(n_clients: int, poc_workspace: str):
 def sort_service_cmds(service_cmds: list) -> list:
     def sort_first(val):
         return val[0]
-
-    order_services = []
+    order_service = []
     for service_name, cmd_path in service_cmds:
         if service_name == "server":
-            order_services.append((0, service_name, cmd_path))
+            order_service.append((0, service_name, cmd_path))
         elif service_name == "admin":
-            order_services.append((sys.maxsize, service_name, cmd_path))
+            order_service.append((sys.maxsize, service_name, cmd_path))
         else:
-            order_services.append((random.randint(2, len(service_cmds)), service_name, cmd_path))
+            order_service.append((random.randint(2, len(service_cmds)), service_name, cmd_path))
 
-    order_services.sort(key=sort_first)
-    return [(service_name, cmd_path) for n, service_name, cmd_path in order_services]
+    order_service.sort(key=sort_first)
+    return order_service
 
 
 def get_cmd_path(poc_workspace, service_name, cmd):
@@ -81,7 +81,7 @@ def start_poc(poc_workspace: str):
     if not is_poc_ready(poc_workspace):
         print(f"workspace {poc_workspace} is not ready, please use poc --prepare to prepare poc workspace")
         sys.exit(2)
-    _run_poc("start", poc_workspace, excluded=["overseer"])
+    _run_poc("start", poc_workspace, excluded=['overseer'])
 
 
 def stop_poc(poc_workspace: str):
@@ -107,7 +107,6 @@ def _build_commands(cmd_type: str, poc_workspace: str, excluded: list):
 def _run_poc(cmd_type: str, poc_workspace: str, excluded: list):
     service_commands = _build_commands(cmd_type, poc_workspace, excluded)
     import time
-
     for service_name, cmd_path in service_commands:
         print(f"{cmd_type}: service: {service_name}, executing {cmd_path}")
         import subprocess
@@ -121,7 +120,6 @@ def _run_poc(cmd_type: str, poc_workspace: str, excluded: list):
 
 def clean_poc(poc_workspace: str):
     import shutil
-
     if is_poc_ready(poc_workspace):
         shutil.rmtree(poc_workspace, ignore_errors=True)
     else:
@@ -198,10 +196,14 @@ def run(job_name):
     sys.path.append(cwd)
     prog_parser, prog_args = parse_args(job_name)
 
-    if is_poc(prog_args):
-        handle_poc_cmd(prog_args)
-    elif is_provision(prog_args):
-        handle_provision_cmd(prog_args)
+    if prog_args.start_poc:
+        prog_args.start_poc(prog_args.workspace)
+    elif prog_args.prepare_poc:
+        prog_args.prepare_poc(prog_args.n_clients, prog_args.workspace)
+    elif prog_args.stop_poc:
+        prog_args.stop_poc(prog_args.workspace)
+    elif prog_args.clean_poc:
+        prog_args.clean_poc(prog_args.workspace)
     else:
         prog_parser.print_help()
 

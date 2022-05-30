@@ -1,0 +1,6 @@
+# visualization requirements
+matplotlib
+pandas
+numpy
+sklearn
+

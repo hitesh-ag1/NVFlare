@@ -1,4 +1,8 @@
 #!/usr/bin/env bash
+
+
+WORK_DIR="$( cd -P "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
 # add current folder to PYTHONPATH
 export PYTHONPATH="${PYTHONPATH}:${PWD}"
 echo "PYTHONPATH is ${PYTHONPATH}"
