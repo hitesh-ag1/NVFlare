@@ -29,17 +29,17 @@ def prepare_poc(n_clients: int, poc_workspace: str):
 def sort_service_cmds(service_cmds: list) -> list:
     def sort_first(val):
         return val[0]
-    order_service = []
+    order_services = []
     for service_name, cmd_path in service_cmds:
         if service_name == "server":
-            order_service.append((0, service_name, cmd_path))
+            order_services.append((0, service_name, cmd_path))
         elif service_name == "admin":
-            order_service.append((sys.maxsize, service_name, cmd_path))
+            order_services.append((sys.maxsize, service_name, cmd_path))
         else:
-            order_service.append((random.randint(2, len(service_cmds)), service_name, cmd_path))
+            order_services.append((random.randint(2, len(service_cmds)), service_name, cmd_path))
 
-    order_service.sort(key=sort_first)
-    return order_service
+    order_services.sort(key=sort_first)
+    return [(service_name, cmd_path) for n, service_name, cmd_path in order_services]
 
 
 def get_cmd_path(poc_workspace, service_name, cmd):
@@ -89,11 +89,7 @@ def stop_poc(poc_workspace: str):
     if not is_poc_ready(poc_workspace):
         print(f"invalid workspace {poc_workspace}")
         sys.exit(4)
-<<<<<<< HEAD
     _run_poc("stop", poc_workspace, excluded=["overseer"])
-=======
-    _run_poc("stop", poc_workspace, excluded=['overseer'])
->>>>>>> d7c6d1b (update nvflare command to include sub command.)
 
 
 def _build_commands(cmd_type: str, poc_workspace: str, excluded: list):
@@ -114,12 +110,7 @@ def _run_poc(cmd_type: str, poc_workspace: str, excluded: list):
     for service_name, cmd_path in service_commands:
         print(f"{cmd_type}: service: {service_name}, executing {cmd_path}")
         import subprocess
-<<<<<<< HEAD
-
         if service_name == "admin":
-=======
-        if service_name == 'admin':
->>>>>>> d7c6d1b (update nvflare command to include sub command.)
             subprocess.run([cmd_path])
         else:
             subprocess.Popen([cmd_path])
@@ -136,7 +127,6 @@ def clean_poc(poc_workspace: str):
 
 
 def def_poc_parser(sub_cmd, prog_name: str):
-<<<<<<< HEAD
     poc_parser = sub_cmd.add_parser("poc")
     poc_parser.add_argument("-n", "--n_clients", type=int, nargs="?", default=2, help="number of sites or clients")
     poc_parser.add_argument(
@@ -162,8 +152,6 @@ def is_poc(cmd_args) -> bool:
 
 
 def is_provision(cmd_args) -> bool:
-    #  todo add provision handling
-=======
     poc_parser = sub_cmd.add_parser('poc')
     poc_parser.add_argument('-n', '--n_clients', type=int, nargs='?', default=2, help='number of sites or clients')
     poc_parser.add_argument('-d', '--workspace', type=str, nargs='?', default=f"/tmp/{prog_name}/poc",
@@ -183,7 +171,7 @@ def is_poc(cmd_args) -> bool:
 
 
 def is_provision(cmd_args) -> bool:
->>>>>>> d7c6d1b (update nvflare command to include sub command.)
+    #  todo add provision handling
     return False
 
 
