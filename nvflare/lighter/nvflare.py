@@ -89,7 +89,11 @@ def stop_poc(poc_workspace: str):
     if not is_poc_ready(poc_workspace):
         print(f"invalid workspace {poc_workspace}")
         sys.exit(4)
+<<<<<<< HEAD
     _run_poc("stop", poc_workspace, excluded=["overseer"])
+=======
+    _run_poc("stop", poc_workspace, excluded=['overseer'])
+>>>>>>> d7c6d1b (update nvflare command to include sub command.)
 
 
 def _build_commands(cmd_type: str, poc_workspace: str, excluded: list):
@@ -110,8 +114,12 @@ def _run_poc(cmd_type: str, poc_workspace: str, excluded: list):
     for service_name, cmd_path in service_commands:
         print(f"{cmd_type}: service: {service_name}, executing {cmd_path}")
         import subprocess
+<<<<<<< HEAD
 
         if service_name == "admin":
+=======
+        if service_name == 'admin':
+>>>>>>> d7c6d1b (update nvflare command to include sub command.)
             subprocess.run([cmd_path])
         else:
             subprocess.Popen([cmd_path])
@@ -128,6 +136,7 @@ def clean_poc(poc_workspace: str):
 
 
 def def_poc_parser(sub_cmd, prog_name: str):
+<<<<<<< HEAD
     poc_parser = sub_cmd.add_parser("poc")
     poc_parser.add_argument("-n", "--n_clients", type=int, nargs="?", default=2, help="number of sites or clients")
     poc_parser.add_argument(
@@ -154,6 +163,27 @@ def is_poc(cmd_args) -> bool:
 
 def is_provision(cmd_args) -> bool:
     #  todo add provision handling
+=======
+    poc_parser = sub_cmd.add_parser('poc')
+    poc_parser.add_argument('-n', '--n_clients', type=int, nargs='?', default=2, help='number of sites or clients')
+    poc_parser.add_argument('-d', '--workspace', type=str, nargs='?', default=f"/tmp/{prog_name}/poc",
+                            help='poc workspace directory')
+    poc_parser.add_argument('--prepare', dest='prepare_poc', action='store_const', const=prepare_poc,
+                            help='prepare poc workspace')
+    poc_parser.add_argument('--start', dest='start_poc', action='store_const', const=start_poc, help='start poc')
+    poc_parser.add_argument('--stop', dest='stop_poc', action='store_const', const=stop_poc, help='stop poc')
+    poc_parser.add_argument('--clean', dest='clean_poc', action='store_const', const=clean_poc, help='cleanup poc workspace')
+
+
+def is_poc(cmd_args) -> bool:
+    return hasattr(cmd_args, 'start_poc') or \
+           hasattr(cmd_args, 'prepare_poc') or \
+           hasattr(cmd_args, 'stop_poc') or \
+           hasattr(cmd_args, 'clean_poc')
+
+
+def is_provision(cmd_args) -> bool:
+>>>>>>> d7c6d1b (update nvflare command to include sub command.)
     return False
 
 
@@ -185,6 +215,8 @@ def def_provision_parser(sub_cmd, prog_name: str):
 
 def parse_args(prog_name: str):
     _parser = argparse.ArgumentParser(description="nvflare parser")
+    provision_parser = sub_cmd.add_parser('provision')
+    provision_parser.add_argument('-n', '--n_clients', type=int, nargs='?', default=2, help='number of sites or clients')
     sub_cmd = _parser.add_subparsers(description="sub command parser")
     def_poc_parser(sub_cmd, prog_name)
     def_provision_parser(sub_cmd, prog_name)
@@ -196,14 +228,10 @@ def run(job_name):
     sys.path.append(cwd)
     prog_parser, prog_args = parse_args(job_name)
 
-    if prog_args.start_poc:
-        prog_args.start_poc(prog_args.workspace)
-    elif prog_args.prepare_poc:
-        prog_args.prepare_poc(prog_args.n_clients, prog_args.workspace)
-    elif prog_args.stop_poc:
-        prog_args.stop_poc(prog_args.workspace)
-    elif prog_args.clean_poc:
-        prog_args.clean_poc(prog_args.workspace)
+    if is_poc(prog_args):
+        handle_poc_cmd(prog_args)
+    elif is_provision(prog_args):
+        handle_provision_cmd(prog_args)
     else:
         prog_parser.print_help()
 
