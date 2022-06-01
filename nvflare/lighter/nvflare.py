@@ -188,8 +188,6 @@ def def_provision_parser(sub_cmd, prog_name: str):
 
 def parse_args(prog_name: str):
     _parser = argparse.ArgumentParser(description="nvflare parser")
-    provision_parser = sub_cmd.add_parser('provision')
-    provision_parser.add_argument('-n', '--n_clients', type=int, nargs='?', default=2, help='number of sites or clients')
     sub_cmd = _parser.add_subparsers(description="sub command parser")
     def_poc_parser(sub_cmd, prog_name)
     def_provision_parser(sub_cmd, prog_name)
