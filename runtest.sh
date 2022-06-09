@@ -307,9 +307,9 @@ done
 
 if [[ -z $cmd ]]; then
    cmd="check_license -l;
-        check_style_type_import nvflare tests;
-        fix_style_import nvflare;
-        fix_style_import tests ;
+        check_style_type_import nvflare tests examples;
+        fix_style_import nvflare examples;
+        fix_style_import tests examples ;
         python3 -m pytest --numprocesses=auto --cov=nvflare --cov-report html:cov_html --junitxml=unit_test.xml tests/unit_test;
        "
 else

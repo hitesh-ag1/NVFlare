@@ -60,7 +60,7 @@ def get_dest_poc_dir(dest_poc):
     return dest_poc
 
 
-def prepare_poc(num_clients, poc_workspace):
+def prepare_poc(num_clients, poc_workspace, white_list:list = []):
     answer = input("This will delete poc folder in current directory and create a new one. Is it OK to proceed? (y/N) ")
     if answer.strip().upper() == "Y":
         dest_poc_folder = get_dest_poc_dir(poc_workspace)

@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
 import argparse
 import os
 import random
@@ -23,7 +22,12 @@ from nvflare.lighter.poc import prepare_poc as generate_poc
 
 def prepare_poc(n_clients: int, poc_workspace: str):
     print(f"prepare_poc at {poc_workspace} for {n_clients} clients")
+    nvflare_home = os.getenv('NVFLARE_HOME')
+    print(f"link examples from {nvflare_home} to poc workspace")
     generate_poc(n_clients, poc_workspace)
+    src = os.path.join(nvflare_home, "examples")
+    dst = os.path.join(poc_workspace, "admin/transfer")
+    os.symlink(src, dst)
 
 
 def sort_service_cmds(service_cmds: list) -> list:
@@ -77,41 +81,51 @@ def is_poc_ready(poc_workspace: str):
     return os.path.isdir(server_dir) and os.path.isdir(admin_dir) and os.path.isdir(overseer_dir)
 
 
-def start_poc(poc_workspace: str):
+def start_poc(poc_workspace: str, white_list: list = []):
     print(f"start_poc at {poc_workspace}")
     if not is_poc_ready(poc_workspace):
         print(f"workspace {poc_workspace} is not ready, please use poc --prepare to prepare poc workspace")
         sys.exit(2)
-    _run_poc("start", poc_workspace, excluded=["overseer"])
+    _run_poc("start", poc_workspace, excluded=["overseer"], white_list=white_list)
 
 
-def stop_poc(poc_workspace: str):
+def stop_poc(poc_workspace: str, white_list: list = []):
     print(f"stop_poc at {poc_workspace}")
     if not is_poc_ready(poc_workspace):
         print(f"invalid workspace {poc_workspace}")
         sys.exit(4)
-    _run_poc("stop", poc_workspace, excluded=["overseer"])
+    _run_poc("stop", poc_workspace, excluded=["overseer"], white_list=white_list)
 
 
-def _build_commands(cmd_type: str, poc_workspace: str, excluded: list):
+def _build_commands(cmd_type: str, poc_workspace: str, excluded: list, white_list: list = []):
+    """
+    :param cmd_type: start/stop
+    :param poc_workspace:  poc workspace directory path
+    :param white_list: whitelist, service name. If empty, include every service
+    :param excluded: excluded service namae
+    :return:
+    """
+
     service_commands = []
     for root, dirs, files in os.walk(poc_workspace):
         if root == poc_workspace:
-            for d in dirs:
-                if d not in excluded:
-                    cmd = get_service_cmd(cmd_type, d)
-                    if cmd:
-                        service_commands.append((d, get_cmd_path(root, d, cmd)))
+            for service_dir_name in dirs:
+                if service_dir_name not in excluded:
+                    if len(white_list) == 0 or service_dir_name in white_list:
+                        cmd = get_service_cmd(cmd_type, service_dir_name)
+                        if cmd:
+                            service_commands.append((service_dir_name, get_cmd_path(root, service_dir_name, cmd)))
     return sort_service_cmds(service_commands)
 
 
-def _run_poc(cmd_type: str, poc_workspace: str, excluded: list):
-    service_commands = _build_commands(cmd_type, poc_workspace, excluded)
+def _run_poc(cmd_type: str, poc_workspace: str, excluded: list, white_list = []):
+    service_commands = _build_commands(cmd_type, poc_workspace, excluded, white_list )
     import time
 
     for service_name, cmd_path in service_commands:
         print(f"{cmd_type}: service: {service_name}, executing {cmd_path}")
         import subprocess
+
         if service_name == "admin":
             subprocess.run([cmd_path])
         else:
@@ -133,7 +147,10 @@ def def_poc_parser(sub_cmd, prog_name: str):
     poc_parser = sub_cmd.add_parser("poc")
     poc_parser.add_argument("-n", "--n_clients", type=int, nargs="?", default=2, help="number of sites or clients")
     poc_parser.add_argument(
-        "-d", "--workspace", type=str, nargs="?", default=f"/tmp/{prog_name}/poc", help="poc workspace directory"
+        "-w", "--workspace", type=str, nargs="?", default=f"/tmp/{prog_name}/poc", help="poc workspace directory"
+    )
+    poc_parser.add_argument(
+        "-s", "--service", type=str, nargs="?", default=f"all", help="service name, default to all = all services, only used for start/stop-poc commands"
     )
     poc_parser.add_argument(
         "--prepare", dest="prepare_poc", action="store_const", const=prepare_poc, help="prepare poc workspace"
@@ -143,7 +160,6 @@ def def_poc_parser(sub_cmd, prog_name: str):
     poc_parser.add_argument(
         "--clean", dest="clean_poc", action="store_const", const=clean_poc, help="cleanup poc workspace"
     )
-
 
 
 def is_poc(cmd_args) -> bool:
@@ -161,14 +177,19 @@ def is_provision(cmd_args) -> bool:
 
 
 def handle_poc_cmd(cmd_args):
+    if cmd_args.service != "all":
+        white_list = [cmd_args.service]
+    else:
+        white_list = []
+
     if cmd_args.start_poc:
-        cmd_args.start_poc(cmd_args.workspace)
+        cmd_args.start_poc(cmd_args.workspace, white_list)
     elif cmd_args.prepare_poc:
         cmd_args.prepare_poc(cmd_args.n_clients, cmd_args.workspace)
     elif cmd_args.stop_poc:
-        cmd_args.stop_poc(cmd_args.workspace)
+        cmd_args.stop_poc(cmd_args.workspace, white_list)
     elif cmd_args.clean_poc:
-        cmd_args.clean_poc(cmd_args.workspace)
+        cmd_args.clean_poc(cmd_args.workspace, white_list)
     else:
         print(f"unable to handle poc command:{cmd_args}")
         sys.exit(3)
