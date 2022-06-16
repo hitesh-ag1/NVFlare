@@ -1,0 +1,66 @@
+RangeIndex: 32561 entries, 0 to 32560
+Data columns (total 15 columns):
+ #   Column          Non-Null Count  Dtype
+---  ------          --------------  -----
+ 0   Age             32561 non-null  int64
+ 1   Workclass       30725 non-null  object
+ 2   fnlwgt          32561 non-null  int64
+ 3   Education       32561 non-null  object
+ 4   Education-Num   32561 non-null  int64
+ 5   Marital Status  32561 non-null  object
+ 6   Occupation      30718 non-null  object
+ 7   Relationship    32561 non-null  object
+ 8   Race            32561 non-null  object
+ 9   Sex             32561 non-null  object
+ 10  Capital Gain    32561 non-null  int64
+ 11  Capital Loss    32561 non-null  int64
+ 12  Hours per week  32561 non-null  int64
+ 13  Country         31978 non-null  object
+ 14  Target          32561 non-null  object
+dtypes: int64(6), object(9)
+memory usage: 3.7+ MB
+None
+col size/2 =  16280.5
+feature = Age, median= 37.0
+g size = 15880
+l size = 15823
+e size = 858
+delta size = 457.5
+feature = fnlwgt, median= 178356.0
+g size = 16280
+l size = 16279
+e size = 2
+delta size = 1.5
+feature = fnlwgt, median= 177831.0
+g size = 8137
+l size = 8143
+e size = 1
+delta size = -2.5
+feature = fnlwgt, median= 178356.0
+g size = 16279
+l size = 16282
+e size = 0
+delta size = -1.5
+
+
+
+feature = Education-Num, median= 10.0
+g size = 10516
+l size = 14754
+e size = 7291
+delta size = 1526.5
+feature = Capital Gain, median= 0.0
+g size = 2712
+l size = 0
+e size = 29849
+delta size = 16280.5
+feature = Capital Loss, median= 0.0
+g size = 1519
+l size = 0
+e size = 31042
+delta size = 16280.5
+feature = Hours per week, median= 40.0
+g size = 9581
+l size = 7763
+e size = 15217
+delta size = 8517.5

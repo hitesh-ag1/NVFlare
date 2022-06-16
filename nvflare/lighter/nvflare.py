@@ -20,13 +20,27 @@ import sys
 from nvflare.lighter.poc import prepare_poc as generate_poc
 
 
+def get_nvflare_home() -> str:
+    nvflare_home = os.getenv('NVFLARE_HOME')
+    if not nvflare_home:
+        print("NVFLARE_HOME environment variable is not set. Please set NVFLARE_HOME=<NVFLARE install dir>")
+        sys.exit(1)
+
+    if nvflare_home.endswith("/"):
+        nvflare_home = nvflare_home[:-1]
+    return nvflare_home
+
+
 def prepare_poc(n_clients: int, poc_workspace: str):
     print(f"prepare_poc at {poc_workspace} for {n_clients} clients")
-    nvflare_home = os.getenv('NVFLARE_HOME')
-    print(f"link examples from {nvflare_home} to poc workspace")
     generate_poc(n_clients, poc_workspace)
-    src = os.path.join(nvflare_home, "examples")
+    prepare_examples(poc_workspace)
+
+
+def prepare_examples(poc_workspace: str):
+    src = os.path.join(get_nvflare_home(), "examples")
     dst = os.path.join(poc_workspace, "admin/transfer")
+    print(f"link examples from {src} to {dst}")
     os.symlink(src, dst)
 
 
@@ -118,8 +132,8 @@ def _build_commands(cmd_type: str, poc_workspace: str, excluded: list, white_lis
     return sort_service_cmds(service_commands)
 
 
-def _run_poc(cmd_type: str, poc_workspace: str, excluded: list, white_list = []):
-    service_commands = _build_commands(cmd_type, poc_workspace, excluded, white_list )
+def _run_poc(cmd_type: str, poc_workspace: str, excluded: list, white_list=[]):
+    service_commands = _build_commands(cmd_type, poc_workspace, excluded, white_list)
     import time
 
     for service_name, cmd_path in service_commands:
@@ -147,10 +161,11 @@ def def_poc_parser(sub_cmd, prog_name: str):
     poc_parser = sub_cmd.add_parser("poc")
     poc_parser.add_argument("-n", "--n_clients", type=int, nargs="?", default=2, help="number of sites or clients")
     poc_parser.add_argument(
-        "-w", "--workspace", type=str, nargs="?", default=f"/tmp/{prog_name}/poc", help="poc workspace directory"
+        "-w", "--workspace", type=str, nargs="?", default=f"{get_nvflare_home()}/poc", help="poc workspace directory"
     )
     poc_parser.add_argument(
-        "-s", "--service", type=str, nargs="?", default=f"all", help="service name, default to all = all services, only used for start/stop-poc commands"
+        "-s", "--service", type=str, nargs="?", default=f"all",
+        help="service name, default to all = all services, only used for start/stop-poc commands"
     )
     poc_parser.add_argument(
         "--prepare", dest="prepare_poc", action="store_const", const=prepare_poc, help="prepare poc workspace"
@@ -164,10 +179,10 @@ def def_poc_parser(sub_cmd, prog_name: str):
 
 def is_poc(cmd_args) -> bool:
     return (
-        hasattr(cmd_args, "start_poc")
-        or hasattr(cmd_args, "prepare_poc")
-        or hasattr(cmd_args, "stop_poc")
-        or hasattr(cmd_args, "clean_poc")
+            hasattr(cmd_args, "start_poc")
+            or hasattr(cmd_args, "prepare_poc")
+            or hasattr(cmd_args, "stop_poc")
+            or hasattr(cmd_args, "clean_poc")
     )
 
 

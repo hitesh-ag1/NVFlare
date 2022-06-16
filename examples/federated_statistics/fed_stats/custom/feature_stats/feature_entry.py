@@ -3,13 +3,14 @@ from typing import Dict, List, NamedTuple, Optional
 import numpy as np
 import pandas as pd
 from pandas.core.series import Series
+
 from .feature_stats_def import DataType
 
 # code logic borrowed from
 # https://github.com/PAIR-code/facets/blob/master/facets_overview/python/base_generic_feature_statistics_generator.py
 # credit should go to Google
 
-nat_as_integer = np.datetime64('NAT').view('i8')
+nat_as_integer = np.datetime64("NAT").view("i8")
 
 
 class FeatureEntry(NamedTuple):
@@ -64,7 +65,7 @@ class FeatureEntryGenerator:
             flattened_temp = []
             for x in flattened:
                 try:
-                    if x is not None and str(x) != 'None' and str(x) != "nan":
+                    if x is not None and str(x) != "None" and str(x) != "nan":
                         flattened_temp.append(x)
                 except UnicodeEncodeError:
                     if x.encode("utf-8") != "nan":

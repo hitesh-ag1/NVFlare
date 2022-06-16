@@ -6,7 +6,7 @@
 # Facets to generate the visualization
 
 from enum import Enum
-from typing import List, NamedTuple, Optional, Dict
+from typing import Dict, List, NamedTuple, Optional
 
 
 class DataType(Enum):

@@ -6,13 +6,13 @@ import sys
 import wget
 from pyhocon import ConfigFactory
 
-from nvflare.lighter.nvflare import is_poc_ready
+from nvflare.lighter.nvflare import is_poc_ready, get_nvflare_home
 
 
 def parse_args(prog_name: str):
     _parser = argparse.ArgumentParser(description="fed_stats parser")
     _parser.add_argument(
-        "-d", "--workspace", type=str, nargs="?", default=f"/tmp/{prog_name}/poc", help="poc workspace directory"
+        "-d", "--workspace", type=str, nargs="?", default=f"{get_nvflare_home()}/poc", help="poc workspace directory"
     )
     _parser.add_argument(
         "--prepare-data",

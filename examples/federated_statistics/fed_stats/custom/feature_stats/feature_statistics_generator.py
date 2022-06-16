@@ -1,10 +1,11 @@
 # from pandas.core.series import Series.ndarray
 from typing import Dict, List, Optional
-from pandas.core.series import Series
-import pandas as pd
-import numpy as np
 
-from .feature_entry import DataType, FeatureEntry, EntryDataSet, FeatureEntryGenerator
+import numpy as np
+import pandas as pd
+from pandas.core.series import Series
+
+from .feature_entry import DataType, EntryDataSet, FeatureEntry, FeatureEntryGenerator
 from .feature_stats_def import (
     BasicNumStats,
     Bucket,
@@ -23,24 +24,29 @@ from .feature_stats_def import (
 
 
 class FeatureStatsGenerator(object):
-
     def generate_statistics(self,
                             dfs: Dict[str, pd.DataFrame],
-                            whitelist_feats=None,
-                            hist_cat_levels_count=None) -> DatasetStatisticsList:
+                            whitelist_feats: Optional[List[str]] = None,
+                            hist_cat_levels_count: Optional[int] = None,
+                            hist_bins: int = 10
+                            ) -> DatasetStatisticsList:
         data_entries: List[EntryDataSet] = FeatureEntryGenerator().to_table_entries(dfs)
-        return self.gen_feature_stats(data_entries, whitelist_feats, hist_cat_levels_count)
+        return self.gen_feature_stats(data_entries, whitelist_feats, hist_cat_levels_count, hist_bins)
 
-    def gen_feature_stats(self,
-                          data_entries: List[EntryDataSet],
-                          whitelist_feats: Optional[List[str]],
-                          hist_cat_levels_count: Optional[int]) -> DatasetStatisticsList:
+    def gen_feature_stats(
+            self,
+            data_entries: List[EntryDataSet],
+            whitelist_feats: Optional[List[str]],
+            hist_cat_levels_count: Optional[int],
+            hist_bin: int = 10
+    ) -> DatasetStatisticsList:
 
         datasets_statistics_list = []
         data_entries = [ds for ds in data_entries if ds is not None and ds.size > 0]
-        for index, table_ds in enumerate(data_entries):
-            feat_entries: List[FeatureEntry] = [table_ds.entries[f] for f in table_ds.entries if
-                                                whitelist_feats is None or f in whitelist_feats]
+        for table_ds in data_entries:
+            feat_entries: List[FeatureEntry] = [
+                table_ds.entries[f] for f in table_ds.entries if whitelist_feats is None or f in whitelist_feats
+            ]
             print("feat_entries len = ", len(feat_entries))
             feature_statistics = []
             for feat in feat_entries:
@@ -48,35 +54,29 @@ class FeatureStatsGenerator(object):
                 common_stats: CommonStatistics = self._get_common_stats(table_ds.size, feat)
 
                 if data_type == DataType.INT or data_type == DataType.FLOAT:
-                    numeric_stats = self._get_numeric_stats(feature_data=feat, common_stats=common_stats)
+                    numeric_stats = self._get_numeric_stats(feature_data=feat,
+                                                            common_stats=common_stats,
+                                                            hist_bins=hist_bin)
                     string_stats: Optional[StringStatistics] = None
                 else:
                     numeric_stats: Optional[NumericStatistics] = None
                     string_stats = self._get_string_stats(
-                        feature_data=feat,
-                        common_stats=common_stats,
-                        his_cat_levels_count=hist_cat_levels_count
+                        feature_data=feat, common_stats=common_stats, his_cat_levels_count=hist_cat_levels_count
                     )
 
                 fs = FeatureStatistics(
-                    name=feat.feature_name,
-                    data_type=data_type,
-                    num_stats=numeric_stats,
-                    string_stats=string_stats
+                    name=feat.feature_name, data_type=data_type, num_stats=numeric_stats, string_stats=string_stats
                 )
 
                 feature_statistics.append(fs)
 
-            ds_stats = DatasetStatistics(
-                name=table_ds.name,
-                num_examples=table_ds.size,
-                features=feature_statistics
-            )
+            ds_stats = DatasetStatistics(name=table_ds.name, num_examples=table_ds.size, features=feature_statistics)
             datasets_statistics_list.append(ds_stats)
 
         return DatasetStatisticsList(datasets=datasets_statistics_list)
 
-    def _get_numeric_stats(self, feature_data: FeatureEntry, common_stats: CommonStatistics) -> NumericStatistics:
+    def _get_numeric_stats(self, feature_data: FeatureEntry, common_stats: CommonStatistics,
+                           hist_bins: int = 10) -> NumericStatistics:
         values = feature_data.values
         feature_name = feature_data.feature_name
         basic_num_stats = self.get_basic_num_stats(values, feature_name)
@@ -86,10 +86,15 @@ class FeatureStatsGenerator(object):
         # inf values will be added back to the first and last buckets.
         nums = np.array(values)
         nums = nums[np.isfinite(nums)]
-        std_histogram = self.get_histogram(nums, num_buckets=10, histogram_type=HistogramType.STANDARD)
-        quantile_histogram = self.get_histogram(
-            nums=nums, num_buckets=10, histogram_type=HistogramType.QUANTILES
-        )
+        value_range = (basic_num_stats.min, basic_num_stats.max)
+        std_histogram = self.get_histogram(nums,
+                                           num_buckets=hist_bins,
+                                           histogram_type=HistogramType.STANDARD,
+                                           value_range=value_range)
+
+        quantile_histogram = self.get_histogram(nums=nums,
+                                                num_buckets=hist_bins,
+                                                histogram_type=HistogramType.QUANTILES)
 
         return NumericStatistics(
             common_stats=common_stats,
@@ -103,6 +108,9 @@ class FeatureStatsGenerator(object):
         )
 
     def _get_common_stats(self, table_data_size: int, feature_data: FeatureEntry) -> CommonStatistics:
+
+        # todo: add populate quantile histograms
+
         has_data = feature_data is not None and len(feature_data.values) != 0
         feat_lens_hist = None
         num_values_hist = None
@@ -120,14 +128,15 @@ class FeatureStatsGenerator(object):
             max_num_values = 0
             avg_num_values = 0
             tot_num_values = 0
-
-            if feature_data.feature_lens:
-                feat_lens_hist = self.get_histogram(
-                    np.array(feature_data.feature_lens), num_buckets=10, histogram_type=HistogramType.QUANTILES
-                )
-                num_values_hist = self.get_histogram(
-                    np.array(feature_data.counts), num_buckets=10, histogram_type=HistogramType.QUANTILES
-                )
+            #
+            # if feature_data.feature_lens:
+            #     feat_lens_hist = self.get_histogram(
+            #         np.array(feature_data.feature_lens), num_buckets=10, histogram_type=HistogramType.QUANTILES
+            #     )
+            #
+            #     num_values_hist = self.get_histogram(
+            #         np.array(feature_data.counts), num_buckets=10, histogram_type=HistogramType.QUANTILES
+            #     )
 
         return CommonStatistics(
             num_non_missing=num_non_missing,
@@ -141,11 +150,16 @@ class FeatureStatsGenerator(object):
         )
 
     @staticmethod
-    def _get_std_histogram_buckets(nums: np.ndarray, num_buckets: int = 10):
+    def _get_std_histogram_buckets(nums: np.ndarray, num_buckets: int = 10,
+                                   value_range: Optional[(float, float)] = None):
         # duplicate calculations, but make code cleaner
         num_posinf = len(nums[np.isposinf(nums)])
         num_neginf = len(nums[np.isneginf(nums)])
-        counts, buckets = np.histogram(nums, bins=num_buckets)
+        if value_range:
+            counts, buckets = np.histogram(nums, bins=num_buckets, range=value_range)
+        else:
+            counts, buckets = np.histogram(nums, bins=num_buckets)
+
         histogram_bucket: List[Bucket] = []
         for bucket_count in range(len(counts)):
             # Add any negative or positive infinities to the first and last
@@ -206,12 +220,13 @@ class FeatureStatsGenerator(object):
             max=stats_max,
         )
 
-    def get_histogram(self, nums: np.ndarray, num_buckets: int, histogram_type: HistogramType) -> Histogram:
+    def get_histogram(self, nums: np.ndarray, num_buckets: int, histogram_type: HistogramType,
+                      value_range: Optional[(float, float)] = None) -> Histogram:
         num_nan = len(nums[np.isnan(nums)])
         if histogram_type == HistogramType.QUANTILES:
             buckets = self._get_quantiles_histogram_buckets(nums, num_quantile_buckets=num_buckets)
         else:
-            buckets = self._get_std_histogram_buckets(nums, num_buckets)
+            buckets = self._get_std_histogram_buckets(nums, num_buckets, value_range)
 
         return Histogram(num_nan=num_nan, num_undefined=0, buckets=buckets, hist_type=histogram_type, hist_name=None)
 
@@ -260,9 +275,7 @@ class FeatureStatsGenerator(object):
         top_values: List[FreqAndValue] = []
         for val_index, val in enumerate(sorted_vals):
             printable_val = self._get_printable_value(val[1])
-            bucket = RankBucket(
-                low_rank=val_index, high_rank=val_index, sample_count=val[0], label=printable_val
-            )
+            bucket = RankBucket(low_rank=val_index, high_rank=val_index, sample_count=val[0], label=printable_val)
             buckets.append(bucket)
 
             if val_index < 2:
