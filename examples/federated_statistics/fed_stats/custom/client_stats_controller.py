@@ -18,7 +18,8 @@ from feature_stats.proto_stats_utils import (
     add_client_stats_to_proto,
     get_aggr_basic_num_stats,
     get_medians,
-    get_aggr_avg_str_lens
+    get_aggr_avg_str_lens,
+    get_common_stats
 )
 from nvflare.apis.fl_context import FLContext
 from nvflare.apis.impl.controller import Task
@@ -61,7 +62,7 @@ class ClientStatsController(TaskController):
             add_client_stats_to_proto(client_name, proto_stats, self.result)
 
         # prepare sharable data
-        aggr_means, agg_counts, total_count, aggr_mins, aggr_maxs, aggr_zeros, aggr_missings = \
+        aggr_means, agg_counts, total_count, aggr_mins, aggr_maxs, aggr_zeros = \
             get_aggr_basic_num_stats(self.result)
 
         medians = get_medians(self.result)
@@ -72,10 +73,12 @@ class ClientStatsController(TaskController):
              FOConstants.AGGR_MINS: aggr_mins,
              FOConstants.AGGR_MAXES: aggr_maxs,
              FOConstants.TOTAL_COUNT: total_count,
-             FOConstants.AGGR_MISSINGs: aggr_missings,
              FOConstants.CLIENT_MEDIANS: medians
              }
         )
+
+    def get_common_stats(self):
+        return get_common_stats(self.result)
 
     def get_aggr_basic_num_stats(self):
         return get_aggr_basic_num_stats(self.result)

@@ -115,27 +115,7 @@ class FacetsOverviewExecutor(BaseAnalyticsExecutor):
                 import numpy as np
                 print(train_data.head())
                 print(train_data.info())
-                for col in train_data:
-                    df = train_data[col]
-                    col_size = df.size
-                    if col == 'Age':
-                        print("col size/2 = ", col_size / 2)
-                    if df.dtype.char in np.typecodes["AllFloat"] or \
-                            df.dtype.char in np.typecodes["AllInteger"] or df.dtype == bool:
-                        median = df.median()
-                        print(f"feature = {col}, median=", median)
-                        g_df = df[df > median + 20]
-                        l_df = df[df < median + 20]
-                        e_df = df[df == median + 20]
-                        print("g size =", g_df.size)
-                        print("l size =", l_df.size)
-                        print("e size =", e_df.size)
-                        print("delta size =", (g_df.size + e_df.size - col_size / 2))
-
-                # for my implementation
                 data = {client_name: train_data}
-                # for google facets-overview
-                # data = [{"name": f"{client_name}", "table": train_data}]
                 self.log_info(fl_ctx, f"load data done for client {client_name}")
                 return data
 
@@ -153,7 +133,7 @@ class FacetsOverviewExecutor(BaseAnalyticsExecutor):
             named_df: Dict[str, pd.DataFrame] = self.load_data(task_name, client_name, fl_ctx)
             self.data = named_df
             bins = self._get_std_histogram_bins(shareable)
-
+            print("client_name = ", client_name)
             return {FeatureStatsConstants.STATS: self._gen_stats(named_df, bins)}
 
         elif task_name == self.aggr_var_task:
@@ -205,7 +185,7 @@ class FacetsOverviewExecutor(BaseAnalyticsExecutor):
                     less_than_df = df[df[col] < pivots[col]]
                     equal_to_df = df[df[col] == pivots[col]]
                     pivot_sizes[col] = (greater_than_df[col].size, equal_to_df[col].size, less_than_df[col].size)
-
+                # todo:
                 # elif data_type == DataType.DATETIME:
                 #     FeatureEntryGenerator.dt_to_num_converter(df[col])
 
@@ -218,21 +198,23 @@ class FacetsOverviewExecutor(BaseAnalyticsExecutor):
 
         elif task_name == FOConstants.AGGR_MEDIAN_DATA_PURGE_TASK:
             self.log_info(fl_ctx, f"exec {task_name} for client {client_name}")
-
+            action = FOConstants.CONTINUE_ACTION
             if FOConstants.MEDIAN_ACTION in shareable:
                 feature_actions = shareable[FOConstants.MEDIAN_ACTION]
                 if feature_actions == FOConstants.DISCARD_LESS_SET_ACTION:
                     self.data = self.greater_than
                     self.less_than = {}
-
                 elif feature_actions == FOConstants.DISCARD_GREATER_SET_ACTION:
                     self.data = self.less_than
                     self.greater_than = {}
-                return {
-                    FeatureStatsConstants.STATS: self._encode_data({FOConstants.MEDIAN_ACTION: FOConstants.STOP_ACTION})
-                }
+                else:
+                    action = FOConstants.STOP_ACTION
+            else:
+                action = FOConstants.STOP_ACTION
+            return {FeatureStatsConstants.STATS: self._encode_data({FOConstants.MEDIAN_ACTION: action})}
 
         elif task_name == FOConstants.AGGR_HISTOGRAM_TASK:
+
             self.log_info(fl_ctx, f"exec {task_name} for client {client_name}")
             # max and min must available for standard histogram
             # otherwise we should fail the calculation
@@ -257,8 +239,6 @@ class FacetsOverviewExecutor(BaseAnalyticsExecutor):
                 FOConstants.STD_HISTOGRAMS: std_histograms,
                 FOConstants.QUAN_HISTOGRAMS: quantile_histograms,
             })}
-
-
         else:
             # Task execution error, return EXECUTION_EXCEPTION Shareable
             self.log_exception(fl_ctx, f"unknown task name: {task_name}")

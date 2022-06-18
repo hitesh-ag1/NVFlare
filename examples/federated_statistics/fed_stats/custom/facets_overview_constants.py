@@ -34,6 +34,7 @@ class FOConstants(object):
     DISCARD_LESS_SET_ACTION = 2
     STOP_ACTION = 4
     INIT_ACTION = 8
+    CONTINUE_ACTION = 16
 
     # KEY WARDS
     TASK_FLOW_ROUND = "task_flow_round"

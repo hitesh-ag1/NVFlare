@@ -1,4 +1,5 @@
 import logging
+import numpy as np
 from typing import Dict
 from feature_stats import feature_statistics_pb2 as fs
 from feature_stats.feature_statistics_pb2 import CommonStatistics as ProtoCommonStatistics
@@ -30,6 +31,56 @@ def get_medians(analytics_data: dict) -> dict:
     return result_median
 
 
+def get_common_stats(analytics_data: dict) -> Dict[str, CommonStatistics]:
+    total_count = 0
+    num_non_missings = {}
+    min_num_values = {}
+    max_num_values = {}
+    avg_num_values = {}
+    tot_num_values = {}
+    counts = {}
+    missings = {}
+    for client_name in analytics_data:
+        stats = analytics_data[client_name][FeatureStatsConstants.STATS]
+        total_count += stats.datasets[0].num_examples
+        for feat in stats.datasets[0].features:
+            if feat.data_type == DataType.INT or feat.data_type == DataType.FLOAT:
+                common_stats = feat.num_stats.common_stats
+            elif feat.data_type == DataType.STRING:
+                common_stats = feat.string_stats.common_stats
+            else:
+                raise NotImplemented
+
+            if feat.name in missings:
+                missings[feat.name] += common_stats.num_missing
+            else:
+                missings[feat.name] = common_stats.num_missing
+
+            cnt = common_stats.num_non_missing
+            if feat.name in counts:
+                counts[feat.name] += cnt
+            else:
+                counts[feat.name] = cnt
+
+    common_stats = {}
+    for feature_name in missings:
+        num_non_missings[feature_name] = total_count - missings[feature_name]
+        min_num_values[feature_name] = int(np.min(counts[feature_name]).astype(int))
+        max_num_values[feature_name] = int(np.max(counts[feature_name]).astype(int))
+        avg_num_values[feature_name] = float(np.mean(counts[feature_name]).astype(float))
+        tot_num_values[feature_name] = avg_num_values[feature_name] * num_non_missings[feature_name]
+
+        cs = CommonStatistics(num_non_missing=num_non_missings[feature_name],
+                              num_missing=missings[feature_name],
+                              min_num_values=min_num_values[feature_name],
+                              max_num_values=max_num_values[feature_name],
+                              avg_num_values=avg_num_values[feature_name],
+                              tot_num_values=tot_num_values[feature_name])
+        common_stats[feature_name] = cs
+
+    return common_stats
+
+
 def get_aggr_basic_num_stats(analytics_data: dict) -> (dict, dict, int, int, int, int):
     means = {}
     counts = {}
@@ -37,7 +88,7 @@ def get_aggr_basic_num_stats(analytics_data: dict) -> (dict, dict, int, int, int
     mins = {}
     maxs = {}
     zeros = {}
-    missings = {}
+
     for client_name in analytics_data:
         stats = analytics_data[client_name][FeatureStatsConstants.STATS]
         total_count += stats.datasets[0].num_examples
@@ -68,37 +119,35 @@ def get_aggr_basic_num_stats(analytics_data: dict) -> (dict, dict, int, int, int
                 else:
                     maxs[feat.name] = feat.num_stats.max
 
-                if feat.name in missings:
-                    missings[feat.name] += feat.num_stats.common_stats.num_missing
-                else:
-                    missings[feat.name] = feat.num_stats.common_stats.num_missing
-
     for feat_name in means:
         means[feat_name] = means[feat_name] / counts[feat_name]
 
     # for tabular data, total_count and element of counts should be the same
-    return means, counts, total_count, mins, maxs, zeros, missings
+    return means, counts, total_count, mins, maxs, zeros
 
 
 def get_aggr_avg_str_lens(analytics_data: dict) -> Dict[str, int]:
     avg_str_lens = {}
     counts = {}
+    total_count = 0
     for client_name in analytics_data:
+        print("client_name =", client_name)
         stats = analytics_data[client_name][FeatureStatsConstants.STATS]
         total_count += stats.datasets[0].num_examples
         for feat in stats.datasets[0].features:
             if feat.data_type == DataType.STRING:
-                cnt = feat.num_stats.common_stats.num_non_missing
+                cnt = feat.string_stats.common_stats.num_non_missing
                 if feat.name in counts:
                     counts[feat.name] += cnt
                 else:
                     counts[feat.name] = cnt
-                if feat.name in means:
+
+                if feat.name in avg_str_lens:
                     avg_str_lens[feat.name] += feat.string_stats.avg_length * cnt
                 else:
                     avg_str_lens[feat.name] = feat.string_stats.avg_length * cnt
 
-            for feat_name in means:
+            for feat_name in avg_str_lens:
                 avg_str_lens[feat_name] = avg_str_lens[feat_name] / counts[feat_name]
 
     return avg_str_lens

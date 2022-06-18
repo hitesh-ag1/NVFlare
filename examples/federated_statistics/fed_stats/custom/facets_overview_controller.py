@@ -18,6 +18,7 @@ from typing import Dict, List, NamedTuple, Optional, Union
 
 from facets_overview_constants import FOConstants
 from feature_stats import feature_statistics_pb2 as fs
+
 from feature_stats.feature_statistics_pb2 import CommonStatistics as ProtoCommonStatistics
 from feature_stats.feature_statistics_pb2 import CustomStatistic as ProtoCustomStatistic
 from feature_stats.feature_statistics_pb2 import DatasetFeatureStatistics as ProtoDatasetFeatureStatistics
@@ -69,74 +70,62 @@ from global_histogram_controller import GlobalHistogramController
 class FacetsOverviewController(Controller):
     def __int__(self):
         self.proto = None
-        self.task_name = "fed_stats"
+
+    @property
+    def task_name(self):
+        return "fed_stats"
 
     def control_flow(self, abort_signal: Signal, fl_ctx: FLContext):
         controller = self
         controller.proto = ProtoDatasetFeatureStatisticsList()
-        client_stats_controller = ClientStatsController()
-        client_stats_controller.set_controller(controller)
-        client_stats_controller.set_proto(controller.proto)
+        client_sc = ClientStatsController()
+        client_sc.set_controller(controller)
+        client_sc.set_proto(controller.proto)
 
-        client_stats_controller.task_control_flow(abort_signal, fl_ctx)
-        rc = client_stats_controller.get_return_code()
+        client_sc.task_control_flow(abort_signal, fl_ctx)
+        rc = client_sc.get_return_code()
         if rc == ReturnCode.OK:
-            #
-            # aggr_means = client_stats_controller.get_aggr_means()
-            # aggr_counts = client_stats_controller.get_aggr_counts()
-            # client_medians = client_stats_controller.get_client_medians()
-            #
-            # shareable = Shareable()
-            # shareable[FOConstants.AGGR_MEANS] = aggr_means
-            # shareable[FOConstants.AGGR_COUNTS] = aggr_counts
-            #
-            # aggr_var_controller = GlobalVarianceController()
-            # aggr_var_controller.set_controller(controller)
-            # aggr_var_controller.set_sharable(shareable)
-            # aggr_var_controller.task_control_flow(abort_signal, fl_ctx)
-            # rc = aggr_var_controller.get_return_code()
-            # if rc == ReturnCode.OK:
-            #     aggr_std_devs = aggr_var_controller.get_aggr_std_dev()
-            #     # update std_devs for protos
-            #     aggr_median_controller = GlobalMedianController()
-            #     aggr_median_controller.set_controller(controller)
-            #
-            #     aggr_median_controller.set_counts(aggr_counts)
-            #     aggr_median_controller.set_client_medians(client_medians)
-            #     rc = aggr_median_controller.get_return_code()
-            #     if rc == ReturnCode.OK:
-            #         aggr_median_controller.shareable.update(shareable)
-            #         aggr_median_controller.task_control_flow(abort_signal, fl_ctx)
-            #
-            #         aggr_medians = aggr_median_controller.get_pivots()
-            #
-            #         aggr_means, agg_counts, \
-            #         total_count, aggr_mins, \
-            #         aggr_maxs, aggr_zeros, \
-            #         aggr_missings = client_stats_controller.get_aggr_basic_num_stats()
-            #
-            #         src_common_stats = {}
-            #         for feat_name in aggr_means:
-            #             src_common_stats[feat_name] = CommonStatistics(num_non_missing=agg_counts[feat_name],
-            #                                                            num_missing=aggr_missings[feat_name],
-            #                                                            min_num_values=aggr_mins[feat_name],
-            #                                                            max_num_values=aggr_maxs[feat_name],
-            #                                                            avg_num_values=aggr_means[feat_name],
-            #                                                            tot_num_values=agg_counts[feat_name])
-            #
-            #         self._populate_global_stats(total_count=total_count,
-            #                                     aggr_medians=aggr_medians,
-            #                                     aggr_std_devs=aggr_std_devs,
-            #                                     aggr_avg_str_lens=client_stats_controller.get_aggr_avg_str_lens(),
-            #                                     src_common_stats=src_common_stats)
-            #     else:
-            #         logging.error(f"no result returned for {aggr_median_controller.task_name} ")
-            # else:
-            #     logging.error(f"no result returned for {aggr_var_controller.task_name} ")
+
+            aggr_means = client_sc.get_aggr_means()
+            aggr_counts = client_sc.get_aggr_counts()
+            client_medians = client_sc.get_client_medians()
+
+            shareable = Shareable()
+            shareable[FOConstants.AGGR_MEANS] = aggr_means
+            shareable[FOConstants.AGGR_COUNTS] = aggr_counts
+
+            global_vc = GlobalVarianceController()
+            global_vc.set_controller(controller)
+            global_vc.set_sharable(shareable)
+            global_vc.task_control_flow(abort_signal, fl_ctx)
+            rc = global_vc.get_return_code()
+            if rc == ReturnCode.OK:
+                aggr_std_devs = global_vc.get_aggr_std_dev()
+                # update std_devs for protos
+                global_mc = GlobalMedianController()
+                global_mc.set_controller(controller)
+
+                global_mc.set_counts(aggr_counts)
+                global_mc.set_client_medians(client_medians)
+                global_mc.shareable.update(shareable)
+                global_mc.task_control_flow(abort_signal, fl_ctx)
+                rc = global_mc.get_return_code()
+                if rc == ReturnCode.OK:
+                    aggr_medians = global_mc.get_pivots()
+                    src_common_stats = client_sc.get_common_stats()
+                    self._populate_global_stats(client_sc,
+                                                aggr_medians=aggr_medians,
+                                                aggr_std_devs=aggr_std_devs,
+                                                aggr_avg_str_lens=client_sc.get_aggr_avg_str_lens(),
+                                                src_common_stats=src_common_stats)
+                else :
+                    logging.error(f"no result returned for {global_mc.task_name} ")
+            else:
+                logging.error(f"no result returned for {global_vc.task_name} ")
 
             self._save_result_to_file(fl_ctx)
         else:
-            logging.error(f"no result returned for {client_stats_controller.task_name} ")
+            logging.error(f"no result returned for {client_sc.task_name} ")
 
     def start_controller(self, fl_ctx: FLContext):
         pass
@@ -187,41 +176,47 @@ class FacetsOverviewController(Controller):
         return common_stats
 
     def _populate_global_stats(self,
-                               total_count,
+                               client_sc: ClientStatsController,
                                aggr_medians: dict,
                                aggr_std_devs: dict,
-                               aggr_zeros: dict,
                                aggr_avg_str_lens: dict,
                                src_common_stats: Dict[str, CommonStatistics],
                                ):
-        proto_ds = controller.proto.datasets.add(name="global", num_examples=total_count)
 
-        for src in controller.proto.datasets[0].features:
+        aggr_means, agg_counts, \
+        total_count, aggr_mins, \
+        aggr_maxs, aggr_zeros = client_sc.get_aggr_basic_num_stats()
+
+        proto_ds = self.proto.datasets.add(name="global", num_examples=total_count)
+
+        for src in self.proto.datasets[0].features:
             dest = proto_ds.features.add(type=src.type, name=src.name)
 
-            if src.num_stats:
+            if src.type == fs.FeatureNameStatistics.INT or src.type == fs.FeatureNameStatistics.FLOAT:
                 dest.num_stats.std_dev = aggr_std_devs[src.name]
                 dest.num_stats.median = aggr_medians[src.name]
                 dest.num_stats.num_zeros = aggr_zeros[src.name]
 
-                dest.num_stats.mean = src_common_stats[src.name].avg_num_values
-                dest.num_stats.min = src_common_stats[src.name].min_num_values
-                dest.num_stats.max = src_common_stats[src.name].max_num_values
+                dest.num_stats.mean = aggr_means[src.name]
+                dest.num_stats.min = aggr_mins[src.name]
+                dest.num_stats.max = aggr_maxs[src.name]
 
                 common_stats = dest.num_stats.common_stats
                 self._populate_common_stats(src_common_stats[src.name], common_stats)
                 #dest.num_stats.histograms =
 
-            elif src.string_stats:
+            elif src.type == fs.FeatureNameStatistics.STRING:
                 common_stats = dest.string_stats.common_stats
                 self._populate_common_stats(src_common_stats[src.name], common_stats)
 
                 # this is not correct, but not sure how to do it correctly without
-                # knowing the overall dataset.
-                dest.string_stats.unique_vals += src.string_stats.unique_vals
-                dest.string_stats.top_values = []  # we can't review user's data
+                # knowing the overall dataset. also AttributeError: unique_vals
+                # dest.string_stats.unique_vals += src.string_stats.unique_vals                #
+                # AttributeError: Assignment not allowed to repeated field "top_values" in protocol message object.
+                # dest.string_stats.top_values = []  # we can't review user's data
                 dest.string_stats.avg_length += aggr_avg_str_lens[src.name]
                 # todo we might be able to do the global rank bt combined unique values
-                dest.string_stats.rank_histogram = None
+                # AttributeError: Assignment not allowed to field "rank_histogram" in protocol message object
+                # dest.string_stats.rank_histogram = None
 
         return proto_ds
