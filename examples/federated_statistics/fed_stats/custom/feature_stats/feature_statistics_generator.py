@@ -1,5 +1,5 @@
 # from pandas.core.series import Series.ndarray
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Union
 
 import numpy as np
 import pandas as pd
@@ -9,6 +9,7 @@ from .feature_entry import DataType, EntryDataSet, FeatureEntry, FeatureEntryGen
 from .feature_stats_def import (
     BasicNumStats,
     Bucket,
+    BucketRange,
     CommonStatistics,
     DatasetStatistics,
     DatasetStatisticsList,
@@ -86,11 +87,11 @@ class FeatureStatsGenerator(object):
         # inf values will be added back to the first and last buckets.
         nums = np.array(values)
         nums = nums[np.isfinite(nums)]
-        value_range = (basic_num_stats.min, basic_num_stats.max)
+        bucket_range = BucketRange(basic_num_stats.min, basic_num_stats.max)
         std_histogram = self.get_histogram(nums,
                                            num_buckets=hist_bins,
                                            histogram_type=HistogramType.STANDARD,
-                                           value_range=value_range)
+                                           bucket_range=bucket_range)
 
         quantile_histogram = self.get_histogram(nums=nums,
                                                 num_buckets=hist_bins,
@@ -108,8 +109,6 @@ class FeatureStatsGenerator(object):
         )
 
     def _get_common_stats(self, table_data_size: int, feature_data: FeatureEntry) -> CommonStatistics:
-
-        # todo: add populate quantile histograms
 
         has_data = feature_data is not None and len(feature_data.values) != 0
         feat_lens_hist = None
@@ -150,13 +149,12 @@ class FeatureStatsGenerator(object):
         )
 
     @staticmethod
-    def _get_std_histogram_buckets(nums: np.ndarray, num_buckets: int = 10,
-                                   value_range: Optional[(float, float)] = None):
+    def _get_std_histogram_buckets(nums: np.ndarray, num_buckets: int = 10, br: Optional[BucketRange] = None):
         # duplicate calculations, but make code cleaner
         num_posinf = len(nums[np.isposinf(nums)])
         num_neginf = len(nums[np.isneginf(nums)])
-        if value_range:
-            counts, buckets = np.histogram(nums, bins=num_buckets, range=value_range)
+        if br:
+            counts, buckets = np.histogram(nums, bins=num_buckets, range=(br.min_vale, br.max_value))
         else:
             counts, buckets = np.histogram(nums, bins=num_buckets)
 
@@ -220,13 +218,17 @@ class FeatureStatsGenerator(object):
             max=stats_max,
         )
 
-    def get_histogram(self, nums: np.ndarray, num_buckets: int, histogram_type: HistogramType,
-                      value_range: Optional[(float, float)] = None) -> Histogram:
+    def get_histogram(self,
+                      nums: np.ndarray,
+                      num_buckets: int,
+                      histogram_type: HistogramType,
+                      bucket_range: Optional[BucketRange] = None) -> Histogram:
+
         num_nan = len(nums[np.isnan(nums)])
         if histogram_type == HistogramType.QUANTILES:
             buckets = self._get_quantiles_histogram_buckets(nums, num_quantile_buckets=num_buckets)
         else:
-            buckets = self._get_std_histogram_buckets(nums, num_buckets, value_range)
+            buckets = self._get_std_histogram_buckets(nums, num_buckets, bucket_range)
 
         return Histogram(num_nan=num_nan, num_undefined=0, buckets=buckets, hist_type=histogram_type, hist_name=None)
 

@@ -87,7 +87,7 @@ class TestFeatureStatisticsGenerator:
         ]
         arr = np.array(test_data)
         df = pd.DataFrame(arr, columns=["id"])
-        dfs = {"train", df}
+        dfs = {"train": df}
         data_stats: DatasetStatisticsList = self.gen.generate_statistics(dfs)
         datasets: List[DatasetStatistics] = data_stats.datasets
         for ds in datasets:

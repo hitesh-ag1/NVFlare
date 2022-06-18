@@ -37,6 +37,13 @@ class FreqAndValue(NamedTuple):
     frequency: float
 
 
+class BucketRange(NamedTuple):
+    # The minimum value of the bucket, inclusive.
+    min_vale: float
+    # The max value of the bucket, exclusive (unless the highValue is positive infinity).
+    max_value: float
+
+
 class Bucket(NamedTuple):
     # The low value of the bucket, inclusive.
     low_value: float

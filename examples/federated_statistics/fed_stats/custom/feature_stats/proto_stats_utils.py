@@ -1,5 +1,5 @@
 import logging
-
+from typing import Dict
 from feature_stats import feature_statistics_pb2 as fs
 from feature_stats.feature_statistics_pb2 import CommonStatistics as ProtoCommonStatistics
 from feature_stats.feature_statistics_pb2 import DatasetFeatureStatisticsList as ProtoDatasetFeatureStatisticsList
@@ -59,12 +59,12 @@ def get_aggr_basic_num_stats(analytics_data: dict) -> (dict, dict, int, int, int
                     zeros[feat.name] = feat.num_stats.num_zeros
 
                 if feat.name in mins:
-                    mins[feat.name] = min( feat.num_stats.min,mins[feat.name])
+                    mins[feat.name] = min(feat.num_stats.min, mins[feat.name])
                 else:
                     mins[feat.name] = feat.num_stats.min
 
                 if feat.name in maxs:
-                    maxs[feat.name] = max( feat.num_stats.max,maxs[feat.name])
+                    maxs[feat.name] = max(feat.num_stats.max, maxs[feat.name])
                 else:
                     maxs[feat.name] = feat.num_stats.max
 
@@ -80,17 +80,28 @@ def get_aggr_basic_num_stats(analytics_data: dict) -> (dict, dict, int, int, int
     return means, counts, total_count, mins, maxs, zeros, missings
 
 
-def get_aggr_histogram(analytics_data:dict):
+def get_aggr_avg_str_lens(analytics_data: dict) -> Dict[str, int]:
+    avg_str_lens = {}
+    counts = {}
     for client_name in analytics_data:
         stats = analytics_data[client_name][FeatureStatsConstants.STATS]
-        if stats:
-            ds: DatasetStatistics = stats.datasets[0]  # for each client, only consider one dataset
-            for src in ds.features:
-                if src.num_stats:
-                    src_histogram = src.num_stats.common_stats.num_values_histogram
+        total_count += stats.datasets[0].num_examples
+        for feat in stats.datasets[0].features:
+            if feat.data_type == DataType.STRING:
+                cnt = feat.num_stats.common_stats.num_non_missing
+                if feat.name in counts:
+                    counts[feat.name] += cnt
+                else:
+                    counts[feat.name] = cnt
+                if feat.name in means:
+                    avg_str_lens[feat.name] += feat.string_stats.avg_length * cnt
+                else:
+                    avg_str_lens[feat.name] = feat.string_stats.avg_length * cnt
 
-                    _copy_num_stats(src, dest)
-                    # _copy_feature_stats(f, proto_ds)
+            for feat_name in means:
+                avg_str_lens[feat_name] = avg_str_lens[feat_name] / counts[feat_name]
+
+    return avg_str_lens
 
 
 def _convert_data_type_to_proto_type(data_type: DataType):

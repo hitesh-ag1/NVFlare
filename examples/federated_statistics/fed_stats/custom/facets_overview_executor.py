@@ -28,12 +28,12 @@ from facets_overview.feature_statistics_pb2 import (
     Histogram,
     NumericStatistics,
     RankHistogram,
-    StringStatistics,
+    StringStatistics
 )
-from facets_overview.generic_feature_statistics_generator import (
-    GenericFeatureStatisticsGenerator,
-    FeatureStatsGenerator
-)
+# from facets_overview.generic_feature_statistics_generator import (
+#     GenericFeatureStatisticsGenerator,
+#     FeatureStatsGenerator
+# )
 from feature_stats.feature_entry import FeatureEntryGenerator
 from feature_stats.feature_statistics_generator import FeatureStatsGenerator
 from feature_stats.feature_stats_constants import FeatureStatsConstants
@@ -42,6 +42,7 @@ from feature_stats.feature_stats_def import (
     DataType,
     Histogram,
     HistogramType,
+    BucketRange,
 )
 from pyhocon import ConfigFactory
 
@@ -87,7 +88,6 @@ class BaseAnalyticsExecutor(Executor):
 class FacetsOverviewExecutor(BaseAnalyticsExecutor):
     def __init__(self):
         super().__init__()
-        self.gfsg = GenericFeatureStatisticsGenerator()
         self.gen = FeatureStatsGenerator()
         self.result = dict()
         self.client_stats_task = FOConstants.CLIENT_STATS_TASK
@@ -245,7 +245,7 @@ class FacetsOverviewExecutor(BaseAnalyticsExecutor):
                 std_histo: Histogram = self.gen.get_histogram(df.values,
                                                               num_buckets=bins,
                                                               histogram_type=HistogramType.STANDARD,
-                                                              value_range=feature_ranges[feat_name])
+                                                              bucket_range=feature_ranges[feat_name])
 
                 quan_histo: Histogram = elf.gen.get_histogram(df.values,
                                                               num_buckets=bins,
@@ -273,14 +273,14 @@ class FacetsOverviewExecutor(BaseAnalyticsExecutor):
             bins = self.hist_bins
         return bins
 
-    def _get_num_feature_range(self, shareable: Shareable) -> Dict[str, (float, float)]:
+    def _get_num_feature_range(self, shareable: Shareable) -> Dict[str, BucketRange]:
         maxes = shareable[FOConstants.AGGR_MAXES]
         mins = shareable[FOConstants.AGGR_MINS]
         feature_ranges = {}
         for feat_name in maxes:
             min_value = mins[feat_name]
             max_value = maxes[feat_name]
-            feature_ranges[feat_name] = (min_value, max_value)
+            feature_ranges[feat_name] = BucketRange(min_value, max_value)
         return feature_ranges
 
     def _calc_variance(self, client_name: str, shareable: Shareable) -> Dict[str, float]:
