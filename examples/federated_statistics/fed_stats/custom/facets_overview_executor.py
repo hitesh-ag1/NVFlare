@@ -93,6 +93,7 @@ class FacetsOverviewExecutor(BaseAnalyticsExecutor):
         self.client_stats_task = FOConstants.CLIENT_STATS_TASK
         self.aggr_var_task = FOConstants.AGGR_VAR_TASK
         self.data = {}
+        self.origin_data = {}
         self.greater_than = {}
         self.less_than = {}
         self.equals_to = {}
@@ -132,6 +133,7 @@ class FacetsOverviewExecutor(BaseAnalyticsExecutor):
 
             named_df: Dict[str, pd.DataFrame] = self.load_data(task_name, client_name, fl_ctx)
             self.data = named_df
+            self.origin_data = named_df
             bins = self._get_std_histogram_bins(shareable)
             print("client_name = ", client_name)
             return {FeatureStatsConstants.STATS: self._gen_stats(named_df, bins)}
@@ -222,22 +224,28 @@ class FacetsOverviewExecutor(BaseAnalyticsExecutor):
             feature_ranges = self._get_num_feature_range(shareable)
             std_histograms = {}
             quantile_histograms = {}
+            df = self.origin_data[client_name]
             for feat_name in feature_ranges:
-                df = self.data[feat_name]
-                std_histo: Histogram = self.gen.get_histogram(df.values,
-                                                              num_buckets=bins,
-                                                              histogram_type=HistogramType.STANDARD,
-                                                              bucket_range=feature_ranges[feat_name])
+                print("feature name = ", feat_name)
+                data_type = FeatureEntryGenerator.dtype_to_data_type(df[feat_name].dtype)
+                if data_type == DataType.INT or data_type == DataType.FLOAT:
+                    std_histo: Histogram = self.gen.get_histogram(df[feat_name].values,
+                                                                  num_buckets=bins,
+                                                                  histogram_type=HistogramType.STANDARD,
+                                                                  bucket_range=feature_ranges[feat_name])
 
-                quan_histo: Histogram = elf.gen.get_histogram(df.values,
-                                                              num_buckets=bins,
-                                                              histogram_type=HistogramType.QUANTILES)
-                std_histograms[feat_name] = std_histo
-                quantile_histograms[feat_name] = quan_histo
+                    quan_histo: Histogram = self.gen.get_histogram(df[feat_name].values,
+                                                                   num_buckets=bins,
+                                                                   histogram_type=HistogramType.QUANTILES)
+                    std_histograms[feat_name] = std_histo
+                    quantile_histograms[feat_name] = quan_histo
+                else:
+                    # todo:
+                    pass
 
             return {FeatureStatsConstants.STATS: self._encode_data({
-                FOConstants.STD_HISTOGRAMS: std_histograms,
-                FOConstants.QUAN_HISTOGRAMS: quantile_histograms,
+                HistogramType.STANDARD: std_histograms,
+                HistogramType.QUANTILES: quantile_histograms,
             })}
         else:
             # Task execution error, return EXECUTION_EXCEPTION Shareable

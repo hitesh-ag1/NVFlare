@@ -8,7 +8,8 @@
         "aggregate_median",
         "aggregate_median:random_select",
         "aggregate_median:size_collection",
-        "aggregate_median:data_purge"
+        "aggregate_median:data_purge",
+        "aggregate_histogram"
       ],
       "executor": {
         "path": "facets_overview_executor.FacetsOverviewExecutor",

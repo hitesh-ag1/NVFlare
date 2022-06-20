@@ -45,11 +45,13 @@ from feature_stats.feature_stats_def import (
     RankHistogram,
     StringStatistics,
 )
+
 from feature_stats.proto_stats_utils import (
     add_client_stats_to_proto,
     get_aggr_basic_num_stats,
     get_medians,
-    get_aggr_avg_str_lens
+    get_aggr_avg_str_lens,
+    copy_proto_histogram
 )
 
 from nvflare.apis.client import Client
@@ -111,14 +113,34 @@ class FacetsOverviewController(Controller):
                 global_mc.task_control_flow(abort_signal, fl_ctx)
                 rc = global_mc.get_return_code()
                 if rc == ReturnCode.OK:
-                    aggr_medians = global_mc.get_pivots()
-                    src_common_stats = client_sc.get_common_stats()
-                    self._populate_global_stats(client_sc,
-                                                aggr_medians=aggr_medians,
-                                                aggr_std_devs=aggr_std_devs,
-                                                aggr_avg_str_lens=client_sc.get_aggr_avg_str_lens(),
-                                                src_common_stats=src_common_stats)
-                else :
+                    # get numeric stats histograms
+                    _, _, _, aggr_mins, aggr_maxs, _ = client_sc.get_aggr_basic_num_stats()
+                    h_shareable = Shareable()
+                    h_shareable.update({FOConstants.AGGR_MINS: aggr_mins, FOConstants.AGGR_MAXES: aggr_maxs})
+                    global_hc = GlobalHistogramController()
+                    global_hc.set_mins_maxs(h_shareable)
+                    global_hc.set_controller(controller)
+
+                    global_hc.task_control_flow(abort_signal, fl_ctx)
+                    rc = global_hc.get_return_code()
+                    if rc == ReturnCode.OK:
+                        aggr_medians = global_mc.get_pivots()
+                        src_common_stats = client_sc.get_common_stats()
+                        self._populate_global_stats(client_sc,
+                                                    global_hc,
+                                                    aggr_medians=aggr_medians,
+                                                    aggr_std_devs=aggr_std_devs,
+                                                    aggr_avg_str_lens=client_sc.get_aggr_avg_str_lens(),
+                                                    src_common_stats=src_common_stats)
+
+
+                    else:
+                        logging.error(f"no result returned for numeric stats {global_hc.task_name} ")
+
+                        # get common stats histograms
+                    # get string stats histograms
+
+                else:
                     logging.error(f"no result returned for {global_mc.task_name} ")
             else:
                 logging.error(f"no result returned for {global_vc.task_name} ")
@@ -155,9 +177,8 @@ class FacetsOverviewController(Controller):
                 result_path = os.path.join(base_dir, file_path)
 
             os.makedirs(Path(result_path).parent.absolute(), exist_ok=True)  # check permissions/handle failures
-
+            # self._print_age_histogram()
             logging.info(f"saving to {result_path}")
-
             data = base64.b64encode(self.proto.SerializeToString()).decode("utf-8")
             with open(result_path, "w") as text_file:
                 text_file.write(data)
@@ -165,6 +186,20 @@ class FacetsOverviewController(Controller):
         except BaseException as e:
             logging.error(f"failed to save file {e}", exc_info=True)
             raise e
+
+    def _print_age_histogram(self):
+        proto = self.proto
+        for ds in proto.datasets:
+            self._print_age_histogram_for_ds(ds)
+
+    def _print_age_histogram_for_ds(self, ds):
+        for f in ds.features:
+            self._print_std_age_histogram(f.name, f.num_stats.histograms)
+
+    def _print_std_age_histogram(self, name, histograms):
+        for h in histograms:
+            if h.type == 0 and name == "Age":
+                print(f"feature = {name}, buckets = {h.buckets}")
 
     def _populate_common_stats(self, src_common_stats: CommonStatistics, common_stats):
 
@@ -177,6 +212,7 @@ class FacetsOverviewController(Controller):
 
     def _populate_global_stats(self,
                                client_sc: ClientStatsController,
+                               global_hc: GlobalHistogramController,
                                aggr_medians: dict,
                                aggr_std_devs: dict,
                                aggr_avg_str_lens: dict,
@@ -195,15 +231,21 @@ class FacetsOverviewController(Controller):
             if src.type == fs.FeatureNameStatistics.INT or src.type == fs.FeatureNameStatistics.FLOAT:
                 dest.num_stats.std_dev = aggr_std_devs[src.name]
                 dest.num_stats.median = aggr_medians[src.name]
-                dest.num_stats.num_zeros = aggr_zeros[src.name]
-
                 dest.num_stats.mean = aggr_means[src.name]
                 dest.num_stats.min = aggr_mins[src.name]
                 dest.num_stats.max = aggr_maxs[src.name]
 
+                dest.num_stats.num_zeros = aggr_zeros[src.name]
                 common_stats = dest.num_stats.common_stats
                 self._populate_common_stats(src_common_stats[src.name], common_stats)
-                #dest.num_stats.histograms =
+
+                for histograms in global_hc.get_histograms():
+                    for hist_type in histograms:
+                        hp = histograms[hist_type][src.name]
+                        proto_hist: ProtoHistogram = dest.num_stats.histograms.add()
+                        copy_proto_histogram(hp, proto_hist)
+                        if src.name == "Age":
+                            self._print_age_histogram()
 
             elif src.type == fs.FeatureNameStatistics.STRING:
                 common_stats = dest.string_stats.common_stats
@@ -218,5 +260,7 @@ class FacetsOverviewController(Controller):
                 # todo we might be able to do the global rank bt combined unique values
                 # AttributeError: Assignment not allowed to field "rank_histogram" in protocol message object
                 # dest.string_stats.rank_histogram = None
+        #
+        # self._print_age_histogram()
 
         return proto_ds

@@ -56,10 +56,7 @@ class ClientStatsController(TaskController):
 
     def task_post_fn(self, task_name: str, fl_ctx: FLContext):
         self.controller.log_info(fl_ctx, f"task_post_fn for task {task_name}")
-        proto_stats = self.proto
-        for client_name in self.result:
-            print(f"client  = {client_name}")
-            add_client_stats_to_proto(client_name, proto_stats, self.result)
+        self.save_client_stats_to_proto()
 
         # prepare sharable data
         aggr_means, agg_counts, total_count, aggr_mins, aggr_maxs, aggr_zeros = \
@@ -76,6 +73,18 @@ class ClientStatsController(TaskController):
              FOConstants.CLIENT_MEDIANS: medians
              }
         )
+
+    def populate_feature_names(self):
+        feature_names = []
+        for i, client_name in enumerate(self.result):
+            if i == 0:
+                feature_names = [feature_name for feature_name in self.result[client_name]]
+        self.shareable.update({"feature_names": feature_names})
+
+    def save_client_stats_to_proto(self):
+        proto_stats = self.proto
+        for client_name in self.result:
+            add_client_stats_to_proto(client_name, proto_stats, self.result)
 
     def get_common_stats(self):
         return get_common_stats(self.result)

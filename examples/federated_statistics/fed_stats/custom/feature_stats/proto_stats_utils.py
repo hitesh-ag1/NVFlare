@@ -62,12 +62,25 @@ def get_common_stats(analytics_data: dict) -> Dict[str, CommonStatistics]:
             else:
                 counts[feat.name] = cnt
 
+            if feat.name in min_num_values:
+                min_num_values[feat.name] = min(common_stats.min_num_values, min_num_values[feat.name])
+            else:
+                min_num_values[feat.name] = common_stats.min_num_values
+
+            if feat.name in max_num_values:
+                max_num_values[feat.name] = max(common_stats.max_num_values, max_num_values[feat.name])
+            else:
+                max_num_values[feat.name] = common_stats.max_num_values
+
+            if feat.name in avg_num_values:
+                avg_num_values[feat.name] += common_stats.avg_num_values * cnt
+            else:
+                avg_num_values[feat.name] = common_stats.avg_num_values * cnt
+
     common_stats = {}
     for feature_name in missings:
         num_non_missings[feature_name] = total_count - missings[feature_name]
-        min_num_values[feature_name] = int(np.min(counts[feature_name]).astype(int))
-        max_num_values[feature_name] = int(np.max(counts[feature_name]).astype(int))
-        avg_num_values[feature_name] = float(np.mean(counts[feature_name]).astype(float))
+        avg_num_values[feature_name] = avg_num_values[feature_name] / counts[feature_name]
         tot_num_values[feature_name] = avg_num_values[feature_name] * num_non_missings[feature_name]
 
         cs = CommonStatistics(num_non_missing=num_non_missings[feature_name],
@@ -105,9 +118,15 @@ def get_aggr_basic_num_stats(analytics_data: dict) -> (dict, dict, int, int, int
                     counts[feat.name] = cnt
 
                 if feat.name in zeros:
+                    if feat.name == "Capital Gain":
+                        print(f"client_name={client_name}, old zeros[feat.name]=", zeros[feat.name])
                     zeros[feat.name] += feat.num_stats.num_zeros
+                    if feat.name == "Capital Gain":
+                        print(f"client_name={client_name}, new zeros[feat.name]=", zeros[feat.name])
                 else:
                     zeros[feat.name] = feat.num_stats.num_zeros
+                    if feat.name == "Capital Gain":
+                        print(f"client_name={client_name}, zeros[feat.name]=", zeros[feat.name])
 
                 if feat.name in mins:
                     mins[feat.name] = min(feat.num_stats.min, mins[feat.name])
@@ -168,7 +187,7 @@ def _convert_data_type_to_proto_type(data_type: DataType):
         raise ValueError(f"not supported data type {data_type}")
 
 
-def _convert_hist_type_to_proto_type(hist_type: HistogramType):
+def convert_hist_type_to_proto_type(hist_type: HistogramType):
     if HistogramType.STANDARD == hist_type:
         return fs.Histogram.HistogramType.STANDARD
     elif HistogramType.QUANTILES == hist_type:
@@ -198,8 +217,8 @@ def _copy_feature_stats(src: FeatureStatistics, proto_ds: ProtoDatasetFeatureSta
         _copy_str_stats(src, dest)
 
 
-def _copy_proto_histogram(src: Histogram, dest: ProtoHistogram):
-    dest.type = _convert_hist_type_to_proto_type(src.hist_type)
+def copy_proto_histogram(src: Histogram, dest: ProtoHistogram):
+    dest.type = convert_hist_type_to_proto_type(src.hist_type)
     dest.num_nan = src.num_nan
     for bk in src.buckets:
         dest.buckets.add(low_value=bk.low_value, high_value=bk.high_value, sample_count=bk.sample_count)
@@ -212,8 +231,8 @@ def _copy_common_stats(src: CommonStatistics, dest: ProtoCommonStatistics):
     dest.max_num_values = src.max_num_values
     dest.avg_num_values = src.avg_num_values
     if src.feature_list_length_histogram:
-        _copy_proto_histogram(src.feature_list_length_histogram, dest.feature_list_length_histogram)
-        _copy_proto_histogram(src.num_values_histogram, dest.num_values_histogram)
+        copy_proto_histogram(src.feature_list_length_histogram, dest.feature_list_length_histogram)
+        copy_proto_histogram(src.num_values_histogram, dest.num_values_histogram)
 
 
 def _copy_num_stats(src: FeatureStatistics, feat: ProtoFeatureNameStatistics):
@@ -227,7 +246,7 @@ def _copy_num_stats(src: FeatureStatistics, feat: ProtoFeatureNameStatistics):
     _copy_common_stats(src.num_stats.common_stats, feat_num_stats.common_stats)
     for hp in src.num_stats.histograms:
         hist: ProtoHistogram = feat_num_stats.histograms.add()
-        _copy_proto_histogram(hp, hist)
+        copy_proto_histogram(hp, hist)
 
 
 def _copy_str_stats(src: FeatureStatistics, feat: ProtoFeatureNameStatistics):

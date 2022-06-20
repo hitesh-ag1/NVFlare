@@ -18,6 +18,7 @@ from feature_stats.feature_stats_constants import FeatureStatsConstants
 from feature_stats.feature_stats_def import (
     Bucket,
     Histogram,
+    HistogramType
 )
 from nvflare.apis.fl_context import FLContext
 from nvflare.apis.impl.controller import Task
@@ -50,10 +51,11 @@ class GlobalHistogramController(TaskController):
 
         clients = fl_ctx.get_engine().get_clients()
         task = Task(name=self.task_name, data=self.shareable, result_received_cb=self.task_results_cb)
+        min_res = int((len(clients) + 1) / 2)
         self.controller.broadcast_and_wait(
             task=task,
             targets=None,
-            min_responses=len(clients) / 2,
+            min_responses=min_res,
             fl_ctx=fl_ctx,
             wait_time_after_min_received=1,
             abort_signal=abort_signal,
@@ -63,47 +65,58 @@ class GlobalHistogramController(TaskController):
 
     def task_post_fn(self, task_name: str, fl_ctx: FLContext):
         self.controller.log_info(fl_ctx, f"in task_post_fn for task {task_name}")
-        global_std_hists = self._aggregate_global_histogram(FOConstants.STD_HISTOGRAMS)
-        global_quan_hists = self._aggregate_global_histogram(FOConstants.QUAN_HISTOGRAMS)
+        global_std_hists = self._aggregate_global_histogram(HistogramType.STANDARD)
+        global_quan_hists = self._aggregate_global_histogram(HistogramType.QUANTILES)
 
-        self.shareable[FOConstants.STD_HISTOGRAMS] = global_std_hists
-        self.shareable[FOConstants.QUAN_HISTOGRAMS] = global_quan_hists
+        self.shareable[HistogramType.STANDARD] = global_std_hists
+        self.shareable[HistogramType.QUANTILES] = global_quan_hists
 
-    def _aggregate_global_histogram(self, hist_type_key: str) -> Dict[str, Histogram]:
-        temp_std_hists = {}
-        for client_name in enumerate(self.result):
+    def _aggregate_global_histogram(self, hist_type: HistogramType) -> Dict[HistogramType, Dict[str, Histogram]]:
+        temp_hists = {}
+        for client_name in self.result:
             histograms = self.result[client_name][FeatureStatsConstants.STATS]
-            feature_std_histograms = histograms[hist_type_key]
-            for feat_name in feature_std_histograms:
-                temp_std_hists[feat_name] = {}
-                std_hist = feature_std_histograms[feat_name]
-                if "num_nan" in temp_std_hists[feat_name]:
-                    temp_std_hists[feat_name]["num_nan"] += std_hist.num_nan
+            feature_histograms = histograms[hist_type]
+            for feat_name in feature_histograms:
+                temp_hists[feat_name] = {}
+                hist = feature_histograms[feat_name]
+                if "num_nan" in temp_hists[feat_name]:
+                    temp_hists[feat_name]["num_nan"] += hist.num_nan
                 else:
-                    temp_std_hists[feat_name]["num_nan"] = std_hist.num_nan
+                    temp_hists[feat_name]["num_nan"] = hist.num_nan
 
-                if "num_undefined" in temp_std_hists[feat_name]:
-                    temp_std_hists[feat_name]["num_undefined"] += std_hist.num_undefined
+                if "num_undefined" in temp_hists[feat_name]:
+                    temp_hists[feat_name]["num_undefined"] += hist.num_undefined
                 else:
-                    temp_std_hists[feat_name]["num_undefined"] = std_hist.num_undefined
+                    temp_hists[feat_name]["num_undefined"] = hist.num_undefined
 
-                temp_std_hists[feat_name]["buckets"] = {}
-                bs = temp_std_hists[feat_name]["buckets"]
+                temp_hists[feat_name]["buckets"] = {}
+                bs = temp_hists[feat_name]["buckets"]
 
-                for bucket in std_hist.buckets:
+                for bucket in hist.buckets:
                     if (bucket.low_value, bucket.high_value) in bs:
                         bs[(bucket.low_value, bucket.high_value)] += bucket.sample_count
                     else:
                         bs[(bucket.low_value, bucket.high_value)] = bucket.sample_count
 
         global_std_hists = {}
-        for feat_name in temp_std_hists:
-            hist = temp_std_hists[feat_name]
-            bs = hist['buckets']
-            buckets: List[Bucket] = []
+        buckets: Dict[str, List[Bucket]] = {}
+        for feat_name in temp_hists:
+            hist1 = temp_hists[feat_name]
+            bs = hist1['buckets']
+            buckets[feat_name] = []
             for (l, h) in bs:
-                buckets.append(Bucket(l, h, bs[(l, h)]))
+                print(f"hist_type = {hist_type}, feature = {feat_name}, l = {l}, h={h}, sample = {bs[(l, h)]}")
+                buckets[feat_name].append(Bucket(l, h, bs[(l, h)]))
 
-            global_std_hists[feat_name] = Histogram(hist['num_nan'], hist['num_undefined'], buckets=buckets)
+            global_std_hists[feat_name] = Histogram(num_nan=hist1['num_nan'],
+                                                    num_undefined=hist1['num_undefined'],
+                                                    buckets=buckets[feat_name],
+                                                    hist_type=hist_type)
+            if feat_name == 'Age':
+                print(f"hist_type = {hist_type}, feature = {feat_name}, histogram=", global_std_hists[feat_name])
 
-        return global_std_hists
+        return {hist_type: global_std_hists}
+
+    def get_histograms(self):
+        return [self.shareable[HistogramType.STANDARD],
+                self.shareable[HistogramType.QUANTILES]]

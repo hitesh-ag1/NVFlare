@@ -10,8 +10,6 @@ class FOConstants(object):
     AGGR_MEDIAN_DATA_PURGE_TASK = "aggregate_median:data_purge"
 
     # Stats variables
-    STD_HISTOGRAMS = "std_histograms"
-    QUAN_HISTOGRAMS = "quantile_histograms"
     AGGR_VARS = "aggr_vars"
     AGGR_STDDEV = "aggr_std_dev"
     AGGR_MEANS = "aggr_means"

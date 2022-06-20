@@ -22,7 +22,7 @@
     });
 
     function protoAjax() {
-     var jqxhr = $.get( {url: "../data/demo.pb"})
+     var jqxhr = $.get( {url: "../data/fed_stats.pb"})
         .done(function(data) {
             var overview = document.querySelector("#elem");
             overview.protoInput = data;
