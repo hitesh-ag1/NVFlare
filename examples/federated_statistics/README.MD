@@ -178,15 +178,97 @@ graph LR;
     E-->F[global histogram]
 ```
 
+### Statistics assemble and Visualization
+
+Once we generated the protobuf defined by Google's Facets-Overview, we can serialize
+the results into string and save to a file. 
+
+the result can be then be loaded via HTML via Javascripts or Python in Jupyter notebook
+
+#### **JavaScripts**
+
+For Java scripts demo, one can do the followings
+
+```html
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+    <meta http-equiv="Content-type" content="text/html;charset=UTF-8"/>
+    <title>Visualizations for ML datasets</title>
+
+    <!-- JS includes -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/webcomponentsjs/1.3.3/webcomponents-lite.js"></script>
+    <link rel="import" href="https://raw.githubusercontent.com/PAIR-code/facets/1.0.0/facets-dist/facets-jupyter.html" >
+
+</head>
+
+<body>
+<facets-overview id="elem"></facets-overview>
+
+<script>
+
+  function setupVis() {
+    $.when(protoAjax()).done(function() {
+       console.log("ok");
+    });
+
+    function protoAjax() {
+     var jqxhr = $.get( {url: "../data/fed_stats.pb"})
+        .done(function(data) {
+            var overview = document.querySelector("#elem");
+            overview.protoInput = data;
+        })
+    }
+  }
+
+  $( document ).ready(function() {
+    setupVis();
+  });
+</script>
+</body>
+
+</html>
 
 
+```
 
+first 
+```bash
+  cp <saved_result file> to demo/data/fed_stats.pb    
+```
 
+```bash
+ 
+  cd demo
+  python -m http.server
 
+```
+then go to brows browser http://localhost:8000/javascripts/
+![img.png](img.png)
 
+#### **Jupyter Notebook**
 
+```python
+from IPython.core.display import display, HTML
+import base64
+protostr = base64.b64encode(proto.SerializeToString()).decode("utf-8")
+HTML_TEMPLATE = """
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/webcomponentsjs/1.3.3/webcomponents-lite.js"></script>
+        <link rel="import" href="/nbextensions/facets-dist/facets-jupyter.html" >
+        <facets-overview id="elem"></facets-overview>
+        <script>
+          document.querySelector("#elem").protoInput = "{protostr}";
+        </script>"""
+html = HTML_TEMPLATE.format(protostr=protostr)
+display(HTML(html))
 
+```
 
+```
+cd demo
+jupyter notebook --NotebookApp.iopub_data_rate_limit=10000000
+```
 
 
 
