@@ -126,6 +126,23 @@ Steps
   * simply add each bucket value
 
 ### Task Controllers
+  The FL server controller is made of many task Controllers. 
++ ClientStatsController
++ GlobalVarianceController
++ GlobalMedianController
++ GlobalHistogramController
++ few more todo for categorical stats
+
+#### Overall Control Flow
+
+```mermaid
+graph TB;
+   A[ClientStatsController] --> B[GlobalVarianceController]; 
+   B --> C[GlobalMedianController];
+   C --> D[GlobalHistogramController];
+   D --> E[Generate Facets-Overview Protobuf]
+```
+#### Specific Task Controllers
 
 + Client Statistics Calculation 
 ```mermaid

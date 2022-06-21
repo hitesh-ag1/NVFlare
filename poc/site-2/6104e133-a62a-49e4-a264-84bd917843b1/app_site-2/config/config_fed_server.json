@@ -1,0 +1,17 @@
+{
+  "format_version": 2,
+  "server": {
+    "heart_beat_timeout": 600
+  },
+  "task_data_filters": [],
+  "task_result_filters": [],
+  "workflows": [
+    {
+      "id": "facets_overview",
+      "path": "facets_overview_controller.FacetsOverviewController",
+      "args": {
+      }
+    }
+  ],
+  "components": []
+}
