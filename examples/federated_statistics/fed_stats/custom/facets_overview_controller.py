@@ -12,61 +12,28 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import logging
-import os
-from abc import ABC
-from typing import Dict, List, NamedTuple, Optional, Union
+from typing import Dict, Optional
 
+from client_stats_controller import ClientStatsController
 from facets_overview_constants import FOConstants
 from feature_stats import feature_statistics_pb2 as fs
-
-from feature_stats.feature_statistics_pb2 import CommonStatistics as ProtoCommonStatistics
-from feature_stats.feature_statistics_pb2 import CustomStatistic as ProtoCustomStatistic
-from feature_stats.feature_statistics_pb2 import DatasetFeatureStatistics as ProtoDatasetFeatureStatistics
 from feature_stats.feature_statistics_pb2 import DatasetFeatureStatisticsList as ProtoDatasetFeatureStatisticsList
-from feature_stats.feature_statistics_pb2 import FeatureNameStatistics as ProtoFeatureNameStatistics
 from feature_stats.feature_statistics_pb2 import Histogram as ProtoHistogram
-from feature_stats.feature_statistics_pb2 import NumericStatistics as ProtoNumericStatistics
-from feature_stats.feature_statistics_pb2 import RankHistogram as ProtoRankHistogram
-from feature_stats.feature_statistics_pb2 import StringStatistics as ProtoStringStatistics
-from feature_stats.feature_stats_constants import FeatureStatsConstants
 from feature_stats.feature_stats_def import (
-    BasicNumStats,
-    Bucket,
     CommonStatistics,
-    DatasetStatistics,
-    DatasetStatisticsList,
-    DataType,
-    FeatureStatistics,
-    FreqAndValue,
-    Histogram,
-    HistogramType,
-    NumericStatistics,
-    RankBucket,
-    RankHistogram,
-    StringStatistics,
 )
-
 from feature_stats.proto_stats_utils import (
-    add_client_stats_to_proto,
-    get_aggr_basic_num_stats,
-    get_medians,
-    get_aggr_avg_str_lens,
     copy_proto_histogram
 )
-
+from global_histogram_controller import GlobalHistogramController
+from global_median_controller import GlobalMedianController
+from global_variance_controller import GlobalVarianceController
 from nvflare.apis.client import Client
-from nvflare.apis.dxo import from_shareable
 from nvflare.apis.fl_constant import FLContextKey, ReturnCode
 from nvflare.apis.fl_context import FLContext
-from nvflare.apis.impl.controller import ClientTask, Controller, Task
+from nvflare.apis.impl.controller import Controller
 from nvflare.apis.shareable import Shareable
 from nvflare.apis.signal import Signal
-
-from task_controller import TaskController
-from client_stats_controller import ClientStatsController
-from global_variance_controller import GlobalVarianceController
-from global_median_controller import GlobalMedianController
-from global_histogram_controller import GlobalHistogramController
 
 
 class FacetsOverviewController(Controller):
