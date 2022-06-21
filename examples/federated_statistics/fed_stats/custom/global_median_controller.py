@@ -68,6 +68,7 @@ class GlobalMedianController(TaskController):
 
             self.median_size_collection_flow(abort_signal, fl_ctx)
             self.median_data_purge_flow(abort_signal, fl_ctx)
+
             self.controller.log_info(fl_ctx, f"task {self.task_name} control flow end.")
             task_flow_round += 1
 
