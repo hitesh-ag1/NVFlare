@@ -49,23 +49,12 @@ class GlobalMedianController(TaskController):
         task_flow_round = 1
         self.set_k_values()
         while not self.stop_actions() and task_flow_round < 2:
-            print(f"task {self.task_name} control flow round = {task_flow_round}.")
-            print(f"task {self.task_name} control flow round = {task_flow_round}.")
-            print(f"task {self.task_name} control flow round = {task_flow_round}.")
-            print(f"task {self.task_name} control flow round = {task_flow_round}.")
-            print(f"task {self.task_name} k_values = {self.shareable[FOConstants.K_VALUES]}.")
+            self.controller.log_info(fl_ctx, f"task {self.task_name} k_values = {self.shareable[FOConstants.K_VALUES]}.")
             if FOConstants.PIVOT_SIZES in self.shareable:
-                print(f"task {self.task_name} m_values = {self.shareable[FOConstants.PIVOT_SIZES]}.")
                 for feat_name in self.shareable[FOConstants.K_VALUES]:
                     m, e, l = self.shareable[FOConstants.PIVOT_SIZES][feat_name]
-                    print(f"{feat_name} delta = ", (m + e) - self.shareable[FOConstants.K_VALUES][feat_name])
             else:
-                print(f"task {self.task_name} m_values is empty ")
-
-            if FOConstants.MEDIAN_ACTION in self.shareable:
-                print(f"task {self.task_name} median action = {self.shareable[FOConstants.MEDIAN_ACTION]}.")
-            else:
-                print(f"task {self.task_name} median action is empty ")
+                self.controller.log_info(fl_ctx,f"task {self.task_name} m_values is empty ")
 
             self.controller.log_info(fl_ctx, f"task {self.task_name} control flow round = {task_flow_round}.")
             self.shareable.set_header(FOConstants.TASK_FLOW_ROUND, task_flow_round)
@@ -104,18 +93,15 @@ class GlobalMedianController(TaskController):
         self.controller.log_info(fl_ctx, f"task {self.task_name} control flow random_select_flow end.")
 
     def random_select_post_fn(self, fl_ctx: FLContext):
-        print(f"random_select_post_fn(), result={self.result}")
+        self.controller.log_info(fl_ctx, f"random_select_post_fn(), result={self.result}")
 
         for client_name in self.result:
-            print(f"process Client {client_name}")
             stats = self.result[client_name][FeatureStatsConstants.STATS]
             if stats and FOConstants.PIVOTS in stats:
                 r_values = stats[FOConstants.PIVOTS]
                 self.shareable[FOConstants.PIVOTS] = r_values
             else:
-                print(f"process Client {client_name} has NO stats result")
-
-        print("on controller: r values = ", self.shareable[FOConstants.PIVOTS])
+                self.controller.log_info(fl_ctx, f"process Client {client_name} has NO stats result")
 
     def get_pivots(self) -> Union[Dict[str, float], None]:
         if FOConstants.PIVOTS in self.shareable:
@@ -159,20 +145,13 @@ class GlobalMedianController(TaskController):
             else:
                 x[feat_name] = v
 
-        print("median_size_collect_post_fn = result ", self.result)
-
         for client_name in self.result:
             stats = self.result[client_name][FeatureStatsConstants.STATS][FOConstants.PIVOT_SIZES]
-            print(f"on controller side: client_name = {client_name}, m_values=", stats)
             for feat_name in stats:
                 (m, e, l) = stats[feat_name]
                 set_value(feat_name, m_values, m)
                 set_value(feat_name, l_values, l)
                 set_value(feat_name, e_values, e)
-
-        print("m_values =", m_values)
-        print("l_values =", l_values)
-        print("e_values =", e_values)
 
         # stop check
         delta = {}
@@ -193,7 +172,6 @@ class GlobalMedianController(TaskController):
                     )
                 else:
                     delta[feat_name] = m_values[feat_name] + e_values[feat_name] - k_values[feat_name]
-                    print("feature=", feat_name, "delta m-k =", delta[feat_name])
                     if delta[feat_name] < 0:
                         k_values[feat_name] = k_values[feat_name] - m_values[feat_name] - e_values[feat_name]
                         self.shareable[FOConstants.MEDIAN_ACTION].update(
@@ -209,7 +187,6 @@ class GlobalMedianController(TaskController):
                         )
 
         self.shareable[FOConstants.K_VALUES] = k_values
-        print("MEDIAN_ACTION =", self.shareable[FOConstants.MEDIAN_ACTION])
         self.shareable[FOConstants.PIVOT_SIZES] = pivot_sizes
 
     def median_data_purge_flow(self, abort_signal: Signal, fl_ctx: FLContext):

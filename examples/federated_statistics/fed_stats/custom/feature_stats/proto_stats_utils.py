@@ -27,7 +27,6 @@ def get_medians(analytics_data: dict) -> dict:
                 median = feat.num_stats.median
                 result_median[client_name].update({feat.name: median})
 
-    print("result_median=", result_median)
     return result_median
 
 
@@ -118,15 +117,9 @@ def get_aggr_basic_num_stats(analytics_data: dict) -> (dict, dict, int, int, int
                     counts[feat.name] = cnt
 
                 if feat.name in zeros:
-                    if feat.name == "Capital Gain":
-                        print(f"client_name={client_name}, old zeros[feat.name]=", zeros[feat.name])
                     zeros[feat.name] += feat.num_stats.num_zeros
-                    if feat.name == "Capital Gain":
-                        print(f"client_name={client_name}, new zeros[feat.name]=", zeros[feat.name])
                 else:
                     zeros[feat.name] = feat.num_stats.num_zeros
-                    if feat.name == "Capital Gain":
-                        print(f"client_name={client_name}, zeros[feat.name]=", zeros[feat.name])
 
                 if feat.name in mins:
                     mins[feat.name] = min(feat.num_stats.min, mins[feat.name])
@@ -150,7 +143,6 @@ def get_aggr_avg_str_lens(analytics_data: dict) -> Dict[str, int]:
     counts = {}
     total_count = 0
     for client_name in analytics_data:
-        print("client_name =", client_name)
         stats = analytics_data[client_name][FeatureStatsConstants.STATS]
         total_count += stats.datasets[0].num_examples
         for feat in stats.datasets[0].features:

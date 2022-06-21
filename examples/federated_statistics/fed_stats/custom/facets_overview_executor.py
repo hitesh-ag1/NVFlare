@@ -135,7 +135,7 @@ class FacetsOverviewExecutor(BaseAnalyticsExecutor):
             self.data = named_df
             self.origin_data = named_df
             bins = self._get_std_histogram_bins(shareable)
-            print("client_name = ", client_name)
+
             return {FeatureStatsConstants.STATS: self._gen_stats(named_df, bins)}
 
         elif task_name == self.aggr_var_task:
@@ -151,11 +151,9 @@ class FacetsOverviewExecutor(BaseAnalyticsExecutor):
             median_actions = {}
             if FOConstants.MEDIAN_ACTION in shareable:
                 median_actions = shareable[FOConstants.MEDIAN_ACTION]
-                print("median actions= ", shareable[FOConstants.MEDIAN_ACTION])
             old_pivots = {}
             if FOConstants.PIVOTS in shareable:
                 old_pivots = shareable[FOConstants.PIVOTS]
-                print("old pivots = ", old_pivots)
 
             df = self.data[client_name]
             pivots = {}
@@ -164,14 +162,12 @@ class FacetsOverviewExecutor(BaseAnalyticsExecutor):
                     pivots[col] = df[df[col].notnull()][col].sample().values[0]
                 else:
                     pivots[col] = old_pivots[col]
-                print(f"r_value for {col}=", pivots[col])
 
             return {FeatureStatsConstants.STATS: self._encode_data({FOConstants.PIVOTS: pivots})}
 
         elif task_name == FOConstants.AGGR_MEDIAN_SIZE_COLL_TASK:
             self.log_info(fl_ctx, f"exec {task_name} for client {client_name}")
             pivots: Dict[str, float] = shareable[FOConstants.PIVOTS]
-            print(f"in {FOConstants.AGGR_MEDIAN_SIZE_COLL_TASK}, r_value={pivots}")
             pivot_sizes = {}
 
             df = self.data[client_name]
@@ -226,7 +222,6 @@ class FacetsOverviewExecutor(BaseAnalyticsExecutor):
             quantile_histograms = {}
             df = self.origin_data[client_name]
             for feat_name in feature_ranges:
-                print("feature name = ", feat_name)
                 data_type = FeatureEntryGenerator.dtype_to_data_type(df[feat_name].dtype)
                 if data_type == DataType.INT or data_type == DataType.FLOAT:
                     std_histo: Histogram = self.gen.get_histogram(df[feat_name].values,

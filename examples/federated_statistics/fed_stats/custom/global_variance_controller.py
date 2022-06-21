@@ -56,9 +56,6 @@ class GlobalVarianceController(TaskController):
         aggr_variances = {}
         for client_name in self.result:
             aggr_vars = self.result[client_name][FeatureStatsConstants.STATS]
-            print("client-name", client_name)
-            print("aggr_vars=", aggr_vars)
-
             feature_vars = aggr_vars[FOConstants.AGGR_VARS]
             for feat in feature_vars:
                 if feat in aggr_variances:

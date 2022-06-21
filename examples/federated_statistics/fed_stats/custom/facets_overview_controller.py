@@ -81,58 +81,40 @@ class FacetsOverviewController(Controller):
         controller = self
         controller.proto = ProtoDatasetFeatureStatisticsList()
         client_sc = ClientStatsController()
-        client_sc.set_controller(controller)
-        client_sc.set_proto(controller.proto)
+        rc = self.run_client_stats_flow(abort_signal, client_sc, controller, fl_ctx)
 
-        client_sc.task_control_flow(abort_signal, fl_ctx)
-        rc = client_sc.get_return_code()
         if rc == ReturnCode.OK:
-
-            aggr_means = client_sc.get_aggr_means()
-            aggr_counts = client_sc.get_aggr_counts()
+            aggr_means, aggr_counts, total_count, aggr_mins, aggr_maxs, aggr_zeros \
+                = client_sc.get_aggr_basic_num_stats()
             client_medians = client_sc.get_client_medians()
 
-            shareable = Shareable()
-            shareable[FOConstants.AGGR_MEANS] = aggr_means
-            shareable[FOConstants.AGGR_COUNTS] = aggr_counts
-
             global_vc = GlobalVarianceController()
-            global_vc.set_controller(controller)
-            global_vc.set_sharable(shareable)
-            global_vc.task_control_flow(abort_signal, fl_ctx)
-            rc = global_vc.get_return_code()
+            rc = self.run_variance_flow(abort_signal, aggr_counts, aggr_means, controller, fl_ctx, global_vc)
+
             if rc == ReturnCode.OK:
                 aggr_std_devs = global_vc.get_aggr_std_dev()
                 # update std_devs for protos
                 global_mc = GlobalMedianController()
-                global_mc.set_controller(controller)
+                rc = self.run_median_flow(abort_signal, aggr_counts, client_medians, controller, fl_ctx, global_mc)
 
-                global_mc.set_counts(aggr_counts)
-                global_mc.set_client_medians(client_medians)
-                global_mc.shareable.update(shareable)
-                global_mc.task_control_flow(abort_signal, fl_ctx)
-                rc = global_mc.get_return_code()
                 if rc == ReturnCode.OK:
                     # get numeric stats histograms
-                    _, _, _, aggr_mins, aggr_maxs, _ = client_sc.get_aggr_basic_num_stats()
-                    h_shareable = Shareable()
-                    h_shareable.update({FOConstants.AGGR_MINS: aggr_mins, FOConstants.AGGR_MAXES: aggr_maxs})
                     global_hc = GlobalHistogramController()
-                    global_hc.set_mins_maxs(h_shareable)
-                    global_hc.set_controller(controller)
+                    rc = self.run_histogram_flow(abort_signal, aggr_maxs, aggr_mins, controller, fl_ctx, global_hc)
 
-                    global_hc.task_control_flow(abort_signal, fl_ctx)
-                    rc = global_hc.get_return_code()
                     if rc == ReturnCode.OK:
                         aggr_medians = global_mc.get_pivots()
                         src_common_stats = client_sc.get_common_stats()
-                        self._populate_global_stats(client_sc,
-                                                    global_hc,
+                        self._populate_global_stats(global_hc,
                                                     aggr_medians=aggr_medians,
                                                     aggr_std_devs=aggr_std_devs,
                                                     aggr_avg_str_lens=client_sc.get_aggr_avg_str_lens(),
+                                                    aggr_means=aggr_means,
+                                                    aggr_mins=aggr_mins,
+                                                    aggr_maxs=aggr_maxs,
+                                                    aggr_zeros=aggr_zeros,
+                                                    total_count=total_count,
                                                     src_common_stats=src_common_stats)
-
 
                     else:
                         logging.error(f"no result returned for numeric stats {global_hc.task_name} ")
@@ -148,6 +130,36 @@ class FacetsOverviewController(Controller):
             self._save_result_to_file(fl_ctx)
         else:
             logging.error(f"no result returned for {client_sc.task_name} ")
+
+    def run_histogram_flow(self, abort_signal, aggr_maxs, aggr_mins, controller, fl_ctx, global_hc):
+        h_shareable = Shareable()
+        h_shareable.update({FOConstants.AGGR_MINS: aggr_mins, FOConstants.AGGR_MAXES: aggr_maxs})
+        global_hc.set_mins_maxs(h_shareable)
+        global_hc.set_controller(controller)
+        global_hc.task_control_flow(abort_signal, fl_ctx)
+        return global_hc.get_return_code()
+
+    def run_median_flow(self, abort_signal, aggr_counts, client_medians, controller, fl_ctx, global_mc):
+        global_mc.set_controller(controller)
+        global_mc.set_counts(aggr_counts)
+        global_mc.set_client_medians(client_medians)
+        global_mc.task_control_flow(abort_signal, fl_ctx)
+        return global_mc.get_return_code()
+
+    def run_client_stats_flow(self, abort_signal, client_sc, controller, fl_ctx):
+        client_sc.set_controller(controller)
+        client_sc.set_proto(controller.proto)
+        client_sc.task_control_flow(abort_signal, fl_ctx)
+        return client_sc.get_return_code()
+
+    def run_variance_flow(self, abort_signal, aggr_counts, aggr_means, controller, fl_ctx, global_vc):
+        shareable = Shareable()
+        shareable[FOConstants.AGGR_MEANS] = aggr_means
+        shareable[FOConstants.AGGR_COUNTS] = aggr_counts
+        global_vc.set_controller(controller)
+        global_vc.set_sharable(shareable)
+        global_vc.task_control_flow(abort_signal, fl_ctx)
+        return global_vc.get_return_code()
 
     def start_controller(self, fl_ctx: FLContext):
         pass
@@ -177,8 +189,9 @@ class FacetsOverviewController(Controller):
                 result_path = os.path.join(base_dir, file_path)
 
             os.makedirs(Path(result_path).parent.absolute(), exist_ok=True)  # check permissions/handle failures
-            # self._print_age_histogram()
-            logging.info(f"saving to {result_path}")
+
+            self.log_info(fl_ctx, f"saving to {result_path}")
+
             data = base64.b64encode(self.proto.SerializeToString()).decode("utf-8")
             with open(result_path, "w") as text_file:
                 text_file.write(data)
@@ -186,20 +199,6 @@ class FacetsOverviewController(Controller):
         except BaseException as e:
             logging.error(f"failed to save file {e}", exc_info=True)
             raise e
-
-    def _print_age_histogram(self):
-        proto = self.proto
-        for ds in proto.datasets:
-            self._print_age_histogram_for_ds(ds)
-
-    def _print_age_histogram_for_ds(self, ds):
-        for f in ds.features:
-            self._print_std_age_histogram(f.name, f.num_stats.histograms)
-
-    def _print_std_age_histogram(self, name, histograms):
-        for h in histograms:
-            if h.type == 0 and name == "Age":
-                print(f"feature = {name}, buckets = {h.buckets}")
 
     def _populate_common_stats(self, src_common_stats: CommonStatistics, common_stats):
 
@@ -211,17 +210,21 @@ class FacetsOverviewController(Controller):
         return common_stats
 
     def _populate_global_stats(self,
-                               client_sc: ClientStatsController,
                                global_hc: GlobalHistogramController,
                                aggr_medians: dict,
                                aggr_std_devs: dict,
                                aggr_avg_str_lens: dict,
+                               aggr_means: dict,
+                               aggr_mins: dict,
+                               aggr_maxs: dict,
+                               aggr_zeros: dict,
+                               total_count: int,
                                src_common_stats: Dict[str, CommonStatistics],
                                ):
 
-        aggr_means, agg_counts, \
-        total_count, aggr_mins, \
-        aggr_maxs, aggr_zeros = client_sc.get_aggr_basic_num_stats()
+        # aggr_means, agg_counts, \
+        # total_count, aggr_mins, \
+        # aggr_maxs, aggr_zeros = client_sc.get_aggr_basic_num_stats()
 
         proto_ds = self.proto.datasets.add(name="global", num_examples=total_count)
 
@@ -244,8 +247,6 @@ class FacetsOverviewController(Controller):
                         hp = histograms[hist_type][src.name]
                         proto_hist: ProtoHistogram = dest.num_stats.histograms.add()
                         copy_proto_histogram(hp, proto_hist)
-                        if src.name == "Age":
-                            self._print_age_histogram()
 
             elif src.type == fs.FeatureNameStatistics.STRING:
                 common_stats = dest.string_stats.common_stats

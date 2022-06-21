@@ -105,16 +105,12 @@ class GlobalHistogramController(TaskController):
             bs = hist1['buckets']
             buckets[feat_name] = []
             for (l, h) in bs:
-                print(f"hist_type = {hist_type}, feature = {feat_name}, l = {l}, h={h}, sample = {bs[(l, h)]}")
                 buckets[feat_name].append(Bucket(l, h, bs[(l, h)]))
 
             global_std_hists[feat_name] = Histogram(num_nan=hist1['num_nan'],
                                                     num_undefined=hist1['num_undefined'],
                                                     buckets=buckets[feat_name],
                                                     hist_type=hist_type)
-            if feat_name == 'Age':
-                print(f"hist_type = {hist_type}, feature = {feat_name}, histogram=", global_std_hists[feat_name])
-
         return {hist_type: global_std_hists}
 
     def get_histograms(self):

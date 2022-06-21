@@ -48,7 +48,6 @@ class FeatureStatsGenerator(object):
             feat_entries: List[FeatureEntry] = [
                 table_ds.entries[f] for f in table_ds.entries if whitelist_feats is None or f in whitelist_feats
             ]
-            print("feat_entries len = ", len(feat_entries))
             feature_statistics = []
             for feat in feat_entries:
                 data_type: DataType = feat.data_type
@@ -172,11 +171,6 @@ class FeatureStatsGenerator(object):
                 bucket_high_value = float("inf")
                 bucket_sample_count += num_posinf
 
-            print(f"range = {br}, "
-                  f"low_value = {bucket_low_value}, "
-                  f"high_value={bucket_high_value}, "
-                  f"sample_count={bucket_sample_count}")
-
             histogram_bucket.append(
                 Bucket(low_value=bucket_low_value, high_value=bucket_high_value, sample_count=bucket_sample_count)
             )
@@ -228,10 +222,6 @@ class FeatureStatsGenerator(object):
                       num_buckets: int,
                       histogram_type: HistogramType,
                       bucket_range: Optional[BucketRange] = None) -> Histogram:
-        print("BUCKET RANGE \n")
-        print("bucket_range =", bucket_range)
-        print("BUCKET RANGE \n")
-
         num_nan = len(nums[np.isnan(nums)])
         if histogram_type == HistogramType.QUANTILES:
             buckets = self._get_quantiles_histogram_buckets(nums, num_quantile_buckets=num_buckets)
