@@ -104,7 +104,7 @@ Steps
 
 ### Global Numeric Stats Algorithms
 + Mean, Count, Zeros, Missing ==> additive
-+ std_dev ^2 = variance = Sum ( Xi - global_mean )/ N -1  where N = total_count
++ std_dev ^2 = variance = Sum ( Xi - global_mean )^2/ N -1  where N = total_count
   + we can calculate the global mean from 1st round, then pass the global means to all clients to 
   + calculate the variance for each client. and add them together
 + median ==>  
