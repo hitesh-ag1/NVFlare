@@ -204,7 +204,7 @@ def handle_poc_cmd(cmd_args):
     elif cmd_args.stop_poc:
         cmd_args.stop_poc(cmd_args.workspace, white_list)
     elif cmd_args.clean_poc:
-        cmd_args.clean_poc(cmd_args.workspace, white_list)
+        cmd_args.clean_poc(cmd_args.workspace)
     else:
         print(f"unable to handle poc command:{cmd_args}")
         sys.exit(3)
