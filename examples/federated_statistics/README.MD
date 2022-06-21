@@ -164,7 +164,7 @@ graph TD;
     F2-->F[check convergence];
     F-->E1[stop];
     F-->E2[not-stop];
-    E2-->B
+    E2-->C
 ```
 
 + Global numerics Histograms Calculation
