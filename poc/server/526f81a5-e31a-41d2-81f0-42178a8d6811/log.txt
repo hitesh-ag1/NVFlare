@@ -1,0 +1,36 @@
+2022-06-21 07:25:26,274 - runner_process - INFO - Runner_process started.
+2022-06-21 07:25:26,626 - ServerCommandAgent - INFO - ServerCommandAgent listening on port: 37723
+2022-06-21 07:25:26,645 - ServerRunner - INFO - [run=526f81a5-e31a-41d2-81f0-42178a8d6811]: Server runner starting ...
+2022-06-21 07:25:26,660 - ServerEngine - INFO - persist the snapshot to: /tmp/nvflare/snapshot-storage/526f81a5-e31a-41d2-81f0-42178a8d6811
+2022-06-21 07:25:26,660 - ServerRunner - INFO - [run=526f81a5-e31a-41d2-81f0-42178a8d6811]: starting workflow facets_overview (<class 'facets_overview_controller.FacetsOverviewController'>) ...
+2022-06-21 07:25:26,660 - ServerRunner - INFO - [run=526f81a5-e31a-41d2-81f0-42178a8d6811]: Workflow facets_overview (<class 'facets_overview_controller.FacetsOverviewController'>) started
+2022-06-21 07:25:26,660 - FacetsOverviewController - INFO - [run=526f81a5-e31a-41d2-81f0-42178a8d6811, wf=facets_overview]: task client_stats control flow started.
+2022-06-21 07:25:26,661 - FacetsOverviewController - INFO - [run=526f81a5-e31a-41d2-81f0-42178a8d6811, wf=facets_overview]: scheduled task client_stats
+2022-06-21 07:25:32,368 - ServerRunner - INFO - [run=526f81a5-e31a-41d2-81f0-42178a8d6811, wf=facets_overview, peer=site-2, peer_run=526f81a5-e31a-41d2-81f0-42178a8d6811]: assigned task to client: name=client_stats, id=bbd86ada-c81f-4689-9c20-8b1e3032e9b0
+2022-06-21 07:25:32,368 - ServerRunner - INFO - [run=526f81a5-e31a-41d2-81f0-42178a8d6811, wf=facets_overview, peer=site-2, peer_run=526f81a5-e31a-41d2-81f0-42178a8d6811, task_name=client_stats, task_id=bbd86ada-c81f-4689-9c20-8b1e3032e9b0]: sent task assignment to client
+2022-06-21 07:25:32,369 - ServerRunner - INFO - [run=526f81a5-e31a-41d2-81f0-42178a8d6811, wf=facets_overview, peer=site-1, peer_run=526f81a5-e31a-41d2-81f0-42178a8d6811]: assigned task to client: name=client_stats, id=c868278b-b9f6-4322-bfb4-dbc427a7bed4
+2022-06-21 07:25:32,369 - ServerRunner - INFO - [run=526f81a5-e31a-41d2-81f0-42178a8d6811, wf=facets_overview, peer=site-1, peer_run=526f81a5-e31a-41d2-81f0-42178a8d6811, task_name=client_stats, task_id=c868278b-b9f6-4322-bfb4-dbc427a7bed4]: sent task assignment to client
+2022-06-21 07:25:32,397 - ServerRunner - INFO - [run=526f81a5-e31a-41d2-81f0-42178a8d6811, wf=facets_overview, peer=site-2, peer_run=526f81a5-e31a-41d2-81f0-42178a8d6811]: got result from client for task: name=client_stats, id=bbd86ada-c81f-4689-9c20-8b1e3032e9b0
+2022-06-21 07:25:32,398 - FacetsOverviewController - INFO - [run=526f81a5-e31a-41d2-81f0-42178a8d6811, wf=facets_overview, peer=site-2, peer_run=526f81a5-e31a-41d2-81f0-42178a8d6811, peer_rc=EXECUTION_EXCEPTION, task_name=client_stats, task_id=bbd86ada-c81f-4689-9c20-8b1e3032e9b0]: invoking result_received_cb ...
+2022-06-21 07:25:32,398 - FacetsOverviewController - INFO - [run=526f81a5-e31a-41d2-81f0-42178a8d6811, wf=facets_overview, peer=site-2, peer_run=526f81a5-e31a-41d2-81f0-42178a8d6811, peer_rc=EXECUTION_EXCEPTION, task_name=client_stats, task_id=bbd86ada-c81f-4689-9c20-8b1e3032e9b0]: Processing client_stats result from client site-2
+2022-06-21 07:25:32,398 - FacetsOverviewController - INFO - [run=526f81a5-e31a-41d2-81f0-42178a8d6811, wf=facets_overview, peer=site-2, peer_run=526f81a5-e31a-41d2-81f0-42178a8d6811, peer_rc=EXECUTION_EXCEPTION, task_name=client_stats, task_id=bbd86ada-c81f-4689-9c20-8b1e3032e9b0]: Ignore the client  site-2 result. client_stats tasked returned error code: EXECUTION_EXCEPTION
+2022-06-21 07:25:32,398 - ServerRunner - INFO - [run=526f81a5-e31a-41d2-81f0-42178a8d6811, wf=facets_overview, peer=site-2, peer_run=526f81a5-e31a-41d2-81f0-42178a8d6811, peer_rc=EXECUTION_EXCEPTION, task_name=client_stats, task_id=bbd86ada-c81f-4689-9c20-8b1e3032e9b0]: finished processing client result by facets_overview
+2022-06-21 07:25:32,398 - ServerRunner - INFO - [run=526f81a5-e31a-41d2-81f0-42178a8d6811, wf=facets_overview, peer=site-1, peer_run=526f81a5-e31a-41d2-81f0-42178a8d6811]: got result from client for task: name=client_stats, id=c868278b-b9f6-4322-bfb4-dbc427a7bed4
+2022-06-21 07:25:32,398 - FacetsOverviewController - INFO - [run=526f81a5-e31a-41d2-81f0-42178a8d6811, wf=facets_overview, peer=site-1, peer_run=526f81a5-e31a-41d2-81f0-42178a8d6811, peer_rc=EXECUTION_EXCEPTION, task_name=client_stats, task_id=c868278b-b9f6-4322-bfb4-dbc427a7bed4]: invoking result_received_cb ...
+2022-06-21 07:25:32,398 - FacetsOverviewController - INFO - [run=526f81a5-e31a-41d2-81f0-42178a8d6811, wf=facets_overview, peer=site-1, peer_run=526f81a5-e31a-41d2-81f0-42178a8d6811, peer_rc=EXECUTION_EXCEPTION, task_name=client_stats, task_id=c868278b-b9f6-4322-bfb4-dbc427a7bed4]: Processing client_stats result from client site-1
+2022-06-21 07:25:32,398 - FacetsOverviewController - INFO - [run=526f81a5-e31a-41d2-81f0-42178a8d6811, wf=facets_overview, peer=site-1, peer_run=526f81a5-e31a-41d2-81f0-42178a8d6811, peer_rc=EXECUTION_EXCEPTION, task_name=client_stats, task_id=c868278b-b9f6-4322-bfb4-dbc427a7bed4]: Ignore the client  site-1 result. client_stats tasked returned error code: EXECUTION_EXCEPTION
+2022-06-21 07:25:32,398 - ServerRunner - INFO - [run=526f81a5-e31a-41d2-81f0-42178a8d6811, wf=facets_overview, peer=site-1, peer_run=526f81a5-e31a-41d2-81f0-42178a8d6811, peer_rc=EXECUTION_EXCEPTION, task_name=client_stats, task_id=c868278b-b9f6-4322-bfb4-dbc427a7bed4]: finished processing client result by facets_overview
+2022-06-21 07:25:33,669 - FacetsOverviewController - INFO - [run=526f81a5-e31a-41d2-81f0-42178a8d6811, wf=facets_overview]: task client_stats exit with status TaskCompletionStatus.OK
+2022-06-21 07:25:34,169 - FacetsOverviewController - INFO - [run=526f81a5-e31a-41d2-81f0-42178a8d6811, wf=facets_overview]: task_post_fn for task client_stats
+2022-06-21 07:25:34,169 - FacetsOverviewController - INFO - [run=526f81a5-e31a-41d2-81f0-42178a8d6811, wf=facets_overview]: task client_stats control flow end.
+2022-06-21 07:25:34,169 - root - ERROR - no result returned for client_stats 
+2022-06-21 07:25:34,169 - ServerRunner - INFO - [run=526f81a5-e31a-41d2-81f0-42178a8d6811, wf=facets_overview]: Workflow: facets_overview finalizing ...
+2022-06-21 07:25:36,171 - ServerRunner - INFO - [run=526f81a5-e31a-41d2-81f0-42178a8d6811, wf=facets_overview]: ABOUT_TO_END_RUN fired
+2022-06-21 07:25:37,411 - ServerRunner - INFO - [run=526f81a5-e31a-41d2-81f0-42178a8d6811, wf=facets_overview, peer=site-2, peer_run=526f81a5-e31a-41d2-81f0-42178a8d6811]: server runner is finalizing - asked client to end the run
+2022-06-21 07:25:37,420 - ServerRunner - INFO - [run=526f81a5-e31a-41d2-81f0-42178a8d6811, wf=facets_overview, peer=site-1, peer_run=526f81a5-e31a-41d2-81f0-42178a8d6811]: server runner is finalizing - asked client to end the run
+2022-06-21 07:25:42,686 - ServerRunner - INFO - [run=526f81a5-e31a-41d2-81f0-42178a8d6811, wf=facets_overview]: END_RUN fired
+2022-06-21 07:25:42,697 - ServerEngine - INFO - The snapshot: /tmp/nvflare/snapshot-storage/526f81a5-e31a-41d2-81f0-42178a8d6811 has been removed.
+2022-06-21 07:25:42,698 - ServerRunner - INFO - [run=526f81a5-e31a-41d2-81f0-42178a8d6811, wf=facets_overview]: Server runner finished.
+2022-06-21 07:25:44,660 - FederatedServer - INFO - Server app stopped.
+
+

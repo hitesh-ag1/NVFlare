@@ -1,0 +1,8 @@
+2022-06-21 07:24:59,941 - FederatedClient - INFO - Got the new primary SP: localhost:8002
+2022-06-21 07:25:00,965 - FederatedClient - INFO - Successfully registered client:site-1 for project example_project. Token:eb9b98a2-eabf-4137-8284-4f18aec00d28 SSID:ebc6125d-0a56-4688-9b08-355fe9e4d61a
+2022-06-21 07:25:26,523 - ClientEngine - INFO - Starting client app. rank: 0
+2022-06-21 07:25:27,529 - ProcessExecutor - INFO - run (526f81a5-e31a-41d2-81f0-42178a8d6811): waiting for child worker process to finish.
+2022-06-21 07:25:45,296 - ProcessExecutor - INFO - run (526f81a5-e31a-41d2-81f0-42178a8d6811): child worker process finished with execution code: 0
+2022-06-21 07:27:52,096 - ClientEngine - INFO - Starting client app. rank: 0
+2022-06-21 07:27:53,103 - ProcessExecutor - INFO - run (8fb7a5d8-bb8e-46d0-a9d6-69af5a7441b9): waiting for child worker process to finish.
+2022-06-21 07:28:34,883 - ProcessExecutor - INFO - run (8fb7a5d8-bb8e-46d0-a9d6-69af5a7441b9): child worker process finished with execution code: 0
