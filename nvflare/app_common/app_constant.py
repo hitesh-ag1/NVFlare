@@ -14,16 +14,15 @@
 
 
 class ExecutorTasks:
-
     TRAIN = "train"
     VALIDATE = "validate"
     CROSS_VALIDATION = "__cross_validation"
     SUBMIT_BEST = "__submit_best"
     REPORT_STATUS = "report_status"
+    LOAD_DATA = "load_data"
 
 
 class AppConstants(object):
-
     CONFIG_PATH = "config_path"
     MODEL_NETWORK = "model_network"
     MULTI_GPU = "multi_gpu"
@@ -118,26 +117,46 @@ class AppConstants(object):
     VALIDATE_TYPE = "_validate_type"
 
 
-class EnvironmentKey(object):
+class StatisticsConstants(AppConstants):
 
+    STATISTICS_COUNT = "stats_count"
+    STATISTICS_MEAN = "stats_mean"
+    STATISTICS_VAR = "stats_var"
+    STATISTICS_STD_DEV = "stats_stddev"
+    STATISTICS_MIN = "stats_min"
+    STATISTICS_MAX = "stats_max"
+    STATISTICS_MEDIAN = "stats_median"
+    STATISTICS_STD_HISTOGRAM = "stats_std_histogram"
+    STATISTICS_QUANTILE_HISTOGRAM = "stats_quantile_histogram"
+
+    BASIC_STATS_TASK = "basic_stats"
+    COUNT_TASK = STATISTICS_COUNT
+    MEAN_TASK = STATISTICS_MEAN
+    VAR_TASK = STATISTICS_VAR
+    STD_DEV_TASK = STATISTICS_STD_DEV
+    MIN_TASK = STATISTICS_MIN
+    MAX_TASK = STATISTICS_MAX
+    MEDIAN_TASK = STATISTICS_MEDIAN
+    STD_HIST_TASK = STATISTICS_STD_HISTOGRAM
+    QUAN_HIST_TASK = STATISTICS_QUANTILE_HISTOGRAM
+
+
+class EnvironmentKey(object):
     CHECKPOINT_DIR = "APP_CKPT_DIR"
     CHECKPOINT_FILE_NAME = "APP_CKPT"
 
 
 class DefaultCheckpointFileName(object):
-
     GLOBAL_MODEL = "FL_global_model.pt"
     BEST_GLOBAL_MODEL = "best_FL_global_model.pt"
 
 
 class ModelName(object):
-
     BEST_MODEL = "best_model"
     FINAL_MODEL = "final_model"
 
 
 class ModelFormat(object):
-
     PT_CHECKPOINT = "pt_checkpoint"
     TORCH_SCRIPT = "torch_script"
     PT_ONNX = "pt_onnx"
@@ -146,13 +165,11 @@ class ModelFormat(object):
 
 
 class ValidateType(object):
-
     BEFORE_TRAIN_VALIDATE = "before_train_validate"
     MODEL_VALIDATE = "model_validate"
 
 
 class AlgorithmConstants(object):
-
     SCAFFOLD_CTRL_DIFF = "scaffold_c_diff"
     SCAFFOLD_CTRL_GLOBAL = "scaffold_c_global"
     SCAFFOLD_CTRL_AGGREGATOR_ID = "scaffold_ctrl_aggregator"
