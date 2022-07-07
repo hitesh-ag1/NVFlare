@@ -1,0 +1,63 @@
+{
+  "format_version": 2,
+  "executors": [
+    {
+      "tasks": [
+        "stats_count"
+      ],
+      "executor": {
+        "path": "df_count_executor.MyDFCountExecutor",
+        "args": {}
+      }
+    },
+    {
+      "tasks": [
+        "stats_mean"
+      ],
+      "executor": {
+        "path": "df_count_executor.MyDFMeanExecutor",
+        "args": {}
+      }
+    },
+    {
+      "tasks": [
+        "stats_var",
+        "stats_stddev"
+      ],
+      "executor": {
+        "path": "MyVarExecutor",
+        "args": {}
+      }
+    },
+    {
+      "tasks": [
+        "stats_std_histogram"
+      ],
+      "executor": {
+        "path": "MyStdHistogramExecutor",
+        "args": {}
+      }
+    },
+    {
+      "tasks": [
+        "stats_quantile_histogram"
+      ],
+      "executor": {
+        "path": "MyQuantileHistogramExecutor",
+        "args": {}
+      }
+    },
+    {
+      "tasks": [
+        "basic_stats"
+      ],
+      "executor": {
+        "path": "MyStatsExecutor",
+        "args": {}
+      }
+    }
+  ],
+  "task_result_filters": [],
+  "task_data_filters": [],
+  "components": []
+}

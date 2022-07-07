@@ -1,0 +1,21 @@
+{
+  "format_version": 2,
+  "server": {
+    "heart_beat_timeout": 600
+  },
+  "task_data_filters": [],
+  "task_result_filters": [],
+  "workflows": [
+    {
+      "id": "facets_overview",
+      "path": "nvflare.workflows.statistics.stats_aggregator.StatisticsAggregator",
+      "args": {
+          "dynamic_bin_range" : "false",
+          "global_bin_range_min" : 10,
+          "global_bin_range_max" : 1200,
+          "global_bins" : 20
+      }
+    }
+  ],
+  "components": []
+}
