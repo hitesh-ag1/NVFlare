@@ -21,7 +21,6 @@ from nvflare.app_common.app_constant import StatisticsConstants as StatsConstant
 class QuantileHistogramExecutor(BaseStatsExecutor, ABC):
     def __init__(
             self,
-            bins: int,
             task_name: str = StatsConstant.QUAN_HIST_TASK,
     ):
         """
@@ -29,7 +28,7 @@ class QuantileHistogramExecutor(BaseStatsExecutor, ABC):
         :param task_name: name of task default to "stats_quantile_histogram"
         """
         super().__init__()
-        self.bins = bins
+        self.bins = 10
         self.task_name = task_name
 
     def set_bins(self, bins):

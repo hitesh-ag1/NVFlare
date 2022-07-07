@@ -22,8 +22,6 @@ from nvflare.app_common.app_constant import StatisticsConstants as StatsConstant
 class StdHistogramExecutor(BaseStatsExecutor, ABC):
     def __init__(
             self,
-            bins: int,
-            global_bin_range: Optional[(float, float)] = None,
             task_name: str = StatsConstant.STD_HIST_TASK,
     ):
         """
@@ -33,8 +31,8 @@ class StdHistogramExecutor(BaseStatsExecutor, ABC):
         :param task_name: name of task default to "stats_std_histogram"
         """
         super().__init__(task_name)
-        self.bins = bins
-        self.global_bin_range = global_bin_range
+        self.bins = 10
+        self.global_bin_range = None
 
     def set_bins(self, bins):
         self.bins = bins

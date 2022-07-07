@@ -30,8 +30,8 @@ class MyDFStatsExecutor(StatsExecutor):
                 StatsConstant.MEAN_TASK: MyDFMeanExecutor(),
                 StatsConstant.COUNT_TASK: MyDFCountExecutor(),
                 StatsConstant.VAR_TASK: MyDFVarExecutor(),
-                StatsConstant.QUAN_HIST_TASK: MyDFQuanHistExecutor,
-                StatsConstant.STD_HIST_TASK: MyDFStdHistExecutor
+                StatsConstant.QUAN_HIST_TASK: MyDFQuanHistExecutor(),
+                StatsConstant.STD_HIST_TASK: MyDFStdHistExecutor()
             }
         self.task_name = task_name
         self.executors = executors
