@@ -1,4 +1,4 @@
-# Federated Statistics of Panda DataFame
+# Federated Statistics of Images
 
 ## setup NVFLARE
 follow the [Quick Start Guide](https://nvflare.readthedocs.io/en/main/quickstart.html) to setup virtual environment and install NVFLARE
@@ -8,22 +8,46 @@ install required packages.
 pip install --upgrade pip
 pip install -r ./requirements.txt
 
-## 1. Compute the local and global statistics for each numerical feature
+
+## 1. Compute the local and global statistics
 
 ### 1.1 Specify client side configuration
 
 We are using a built-in NVFLARE executor,  
 
 ```
- "executor": {
+{
+  "format_version": 2,
+  "executors": [
+    {
+      "tasks": [
+        "fed_stats"
+      ],
+      "executor": {
         "id": "Executor",
-        "path": "nvflare.app_common.executors.statistics_executor.StatisticsExecutor",
+        "path": "nvflare.app_common.executors.statistics.statistics_executor.StatisticsExecutor",
         "args": {
-          "generator_id": "df_stats_generator",
-          "min_count" : 10,
+          "generator_id": "local_stats_calculator",
+          "min_count": 10,
           "min_random": 0.1,
-          "max_random": 0.3
-  },
+          "max_random": 0.3,
+          "max_bins_percent": 0.1
+        }
+      }
+    }
+  ],
+  "task_result_filters": [],
+  "task_data_filters": [],
+  "components": [
+    {
+      "id": "local_stats_calculator",
+      "path": "image_histogram.ImageHistogram",
+      "args": {
+        "data_path": "data"
+      }
+    }
+  ]
+}
 
 ```
 Here we specify a min_count = 10. It means each site should have at least 10 records. 
@@ -41,26 +65,26 @@ In current example, we calculate tabular dataset statistics via Pandas DataFrame
 ### 1.2 Specify Server side configuration
  
 Here we use the built-in Controller, called GlobalStatistics. Here we selected all the available metrics.  
-
-```
-"workflows": [
+```json
+ "workflows": [
     {
       "id": "fed_stats_controller",
       "path": "nvflare.app_common.workflows.statistics_controller.StatisticsController",
       "args": {
         "metric_configs": {
           "count": {},
-          "mean": {},
-          "sum": {},
-          "stddev": {},
-          "histogram": { "*": {"bins": 10 },
-                         "Age": {"bins": 5, "range":[0,120]}
-                       }
+          "histogram": {
+            "*": {
+              "bins": 255, "range": [0,256]
+            }
+          }
         },
         "writer_id": "stats_writer"
       }
     }
   ],
+
+
 ```
 In above configuration "*" indicate default feature.  Here we specify feature "Age" needs 5 bins and histogram range is within 0.120
 for all other features, the bin is 10, range is not specified, i.e. the ranges will be dynamically estimated.
@@ -73,7 +97,7 @@ the writer_id identify the output writer component, defined as
       "id": "stats_writer",
       "path": "nvflare.app_common.statistics.json_stats_file_persistor.JsonStatsFileWriter",
       "args": {
-        "output_path": "statistics/adults_stats.json",
+        "output_path": "statistics/image_histograms.json",
         "json_encoder_path": "nvflare.app_common.utils.json_utils.ObjectEncoder"
       }
     }
@@ -86,7 +110,7 @@ This configuration shows a JSON file output writer, output path indicates the fi
 
 ```
 
-class DFStatistics(Statistics):
+class ImageHistogram(Statistics):
     # rest of code 
 
 ```
@@ -94,21 +118,21 @@ class DFStatistics(Statistics):
 ## 2. prepare POC workspace
 
 ```
-   nvflare poc --prepare 
+   nvflare poc --prepare -n 4
 ```
-This will create a poc at /tmp/nvflare/poc with n = 2 clients.
+This will create a poc at /tmp/nvflare/poc with n = 4 clients.
 
 
 ## 3. Download the example data
-In this example, we are using UCI (University of California, Irwin) [adult dataset](https://archive.ics.uci.edu/ml/datasets/adult)
-The original dataset has already contains "training" and "test" datasets. Here we simply assume that "training" and test data sets are belong to different clients.
-so we assigned the training data and test data into two clients.
+In this example, we user Stanford Dogs Dataset: 20,580 images of dogs across 120 unique breed categories
+with roughly 150 images for each class.
 
-Now we use data utility to download UCI datasets to separate client package directory in POC workspace
+download and untar the datasets into <images Location>
 
-<poc workspace>/site-1/data.csv
-<poc workspace>/site-2/data.csv
 
+Now we use data utility to split images to client package directory in POC workspace
+
+The different category of dogs images are symlinks to the <images location>
 
 ```
 python3 data_utils.py  -h
@@ -121,19 +145,15 @@ optional arguments:
   -h, --help            show this help message and exit
   --prepare-data        prepare data based on configuration
 
-```
-
-```
-python3 data_utils.py  --prepare-data
+python data_utils.py --prepare-data -src_path=<images location>
 
 prepare data for poc workspace:/tmp/nvflare/poc
-remove existing data at /tmp/nvflare/poc/site-1/data.csv
-wget download to /tmp/nvflare/poc/site-1/data.csv
-100% [..........................................................................] 3974305 / 3974305remove existing data at /tmp/nvflare/poc/site-2/data.csv
-wget download to /tmp/nvflare/poc/site-2/data.csv
-100% [..........................................................................] 2003153 / 2003153done with prepare data
-
+prepare data for client:site-1 at path: /tmp/nvflare/poc/site-1/data
+prepare data for client:site-2 at path: /tmp/nvflare/poc/site-2/data
+prepare data for client:site-3 at path: /tmp/nvflare/poc/site-3/data
+prepare data for client:site-4 at path: /tmp/nvflare/poc/site-4/data
 ```
+
 If your poc_workspace is in a different location, use the following command
 
 ```
@@ -141,26 +161,13 @@ export NVFLARE_POC_WORKSPACE=<new poc workspace location>
 ```
 then repeat above
 
-
-## 4 prepare poc workspace
-
-Follow the quick start instructions to prepare POC workspace.
-``
-    nvflare poc --prepare
-``
-## 5 prepare data
-
-```
-cd $NVFLARE_HOME/examples/federated_statistics/df_stats
-python data_utils.py -h 
-```
 it should show the help commands, to prepare the data, you can use
 
 ```
 python data_utils.py -prepare-data 
 ```
 
-## 6 start nvflare in poc mode
+## 4 start nvflare in poc mode
 
 ```
 nvflare poc --start
@@ -169,9 +176,9 @@ nvflare poc --start
 once you have done with above command, you are already login to the NVFLARE console (aka Admin Console) 
 
 
-## 7 Submit job
+## 5 Submit job
 
-### 7.1 Submit job using flare console
+### submit job using flare console
 
 Inside the console, submit the job:
 ```
@@ -180,7 +187,7 @@ submit_job federated_statistics/df_stats
 
 For a complete list of available flare console commands, see [here](https://nvflare.readthedocs.io/en/main/user_guide/operation.html).
 
-### 7.2 List the submitted job
+### 5.1 List the submitted job
 
 You should see the server and clients in your first terminal executing the job now.
 You can list the running job by using `list_jobs` in the admin console.
@@ -195,7 +202,7 @@ Your output should be similar to the following.
 -----------------------------------------------------------------------------------------------------------------------------------
 ```
  
-## 8. get the result
+### 5.2 get the result
 
 If successful, the computed statis can be downloaded using this admin command:
 ```
@@ -203,7 +210,7 @@ download_job [JOB_ID]
 ```
 After download, it will be available in the stated download directory under `[JOB_ID]/workspace/statistics` as  `adult_stats.json`
 
-## 9. Output Format
+## 6. Output Format
 By default, save the result in JSON format. You are free to write another StatsWriter to output in other format.
 
 ### JSON FORMAT
@@ -258,7 +265,7 @@ The output of the json is like the followings
      },
 ```
 
-## 10. Visualization
+## 7. Visualization
    with json format, the data can be easily visualized via pandas dataframe and plots. 
    A visualization utility tools are showed in show_stats.py in visualization directory
    You can run jupyter notebook visualization.ipynb
@@ -266,7 +273,5 @@ The output of the json is like the followings
 ```python
     jupyter notebook  visualization.ipynb
 ```
-   you can some snapshots of the visualizations in ![stats](demo/df_stats.png) and ![histogram plot](demo/hist_plot.png)
-
-
+ 
    

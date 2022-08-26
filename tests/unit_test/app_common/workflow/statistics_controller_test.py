@@ -11,12 +11,11 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-from nvflare.apis.shareable import Shareable
 from nvflare.app_common.abstract.statistics_spec import MetricConfig
 from nvflare.app_common.app_constant import StatisticsConstants as SC
 from nvflare.fuel.utils import fobs
 
-from .mock_global_statistics import MockGlobalStatistics
+from .mock_statistics_controller import MockStatisticsController
 
 
 class TestStatisticsController:
@@ -30,7 +29,7 @@ class TestStatisticsController:
             "stddev": {},
             "histogram": {"*": {"bins": 10}, "Age": {"bins": 5, "range": [0, 120]}},
         }
-        cls.stats_controller = MockGlobalStatistics(metric_configs=metric_configs, writer_id="")
+        cls.stats_controller = MockStatisticsController(metric_configs=metric_configs, writer_id="")
 
     @classmethod
     def teardown_class(cls):

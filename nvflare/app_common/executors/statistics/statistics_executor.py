@@ -37,7 +37,13 @@ from nvflare.fuel.utils import fobs
 
 class StatisticsExecutor(Executor):
     def __init__(
-        self, generator_id: str, min_count: int, min_random: float, max_random: float, max_bins_percent: float
+            self,
+            generator_id: str,
+            min_count: int,
+            min_random: float,
+            max_random: float,
+            max_bins_percent: float,
+            precision=4
     ):
         """
 
@@ -77,6 +83,7 @@ class StatisticsExecutor(Executor):
         self.max_random = max_random
         self.min_random = min_random
         self.max_bins_percent = max_bins_percent
+        self.precision = precision
         fobs_registration()
 
     def validate_inputs(self, fl_ctx: FLContext):
@@ -189,7 +196,7 @@ class StatisticsExecutor(Executor):
         return filter_numeric_features(ds_features)
 
     def validate(
-        self, client_name: str, ds_features: Dict[str, List[Feature]], shareable: Shareable, fl_ctx: FLContext
+            self, client_name: str, ds_features: Dict[str, List[Feature]], shareable: Shareable, fl_ctx: FLContext
     ):
         count_config = MetricConfig(StC.STATS_COUNT, {})
         for ds_name in ds_features:
@@ -204,49 +211,56 @@ class StatisticsExecutor(Executor):
                     )
 
     def get_count(
-        self, dataset_name: str, feature_name: str, metric_config: MetricConfig, inputs: Shareable, fl_ctx: FLContext
+            self, dataset_name: str, feature_name: str, metric_config: MetricConfig, inputs: Shareable,
+            fl_ctx: FLContext
     ) -> int:
 
         result = self.stats_generator.count(dataset_name, feature_name)
         return result
 
     def get_sum(
-        self, dataset_name: str, feature_name: str, metric_config: MetricConfig, inputs: Shareable, fl_ctx: FLContext
+            self, dataset_name: str, feature_name: str, metric_config: MetricConfig, inputs: Shareable,
+            fl_ctx: FLContext
     ) -> float:
 
-        result = self.stats_generator.sum(dataset_name, feature_name)
+        result = round(self.stats_generator.sum(dataset_name, feature_name), self.precision)
         return result
 
     def get_mean(
-        self, dataset_name: str, feature_name: str, metric_config: MetricConfig, inputs: Shareable, fl_ctx: FLContext
+            self, dataset_name: str, feature_name: str, metric_config: MetricConfig, inputs: Shareable,
+            fl_ctx: FLContext
     ) -> float:
         count = self.stats_generator.count(dataset_name, feature_name)
         sum_value = self.stats_generator.sum(dataset_name, feature_name)
         if count is not None and sum_value is not None:
-            return sum_value / count
+            return round(sum_value / count, self.precision)
         else:
             # user did not implement count and/or sum, call means directly.
-            mean = self.stats_generator.mean(dataset_name, feature_name)
+            mean = round(self.stats_generator.mean(dataset_name, feature_name), self.precision)
             # self._check_result(mean, metric_config.name)
             return mean
 
     def get_stddev(
-        self, dataset_name: str, feature_name: str, metric_config: MetricConfig, inputs: Shareable, fl_ctx: FLContext
+            self, dataset_name: str, feature_name: str, metric_config: MetricConfig, inputs: Shareable,
+            fl_ctx: FLContext
     ) -> float:
 
-        result = self.stats_generator.stddev(dataset_name, feature_name)
+        result = round(self.stats_generator.stddev(dataset_name, feature_name), self.precision)
         return result
 
     def get_variance_with_mean(
-        self, dataset_name: str, feature_name: str, metric_config: MetricConfig, inputs: Shareable, fl_ctx: FLContext
+            self, dataset_name: str, feature_name: str, metric_config: MetricConfig, inputs: Shareable,
+            fl_ctx: FLContext
     ) -> float:
         global_mean = inputs[StC.STATS_GLOBAL_MEAN][dataset_name][feature_name]
         global_count = inputs[StC.STATS_GLOBAL_COUNT][dataset_name][feature_name]
         result = self.stats_generator.variance_with_mean(dataset_name, feature_name, global_mean, global_count)
+        result = round(result, self.precision)
         return result
 
     def get_histogram(
-        self, dataset_name: str, feature_name: str, metric_config: MetricConfig, inputs: Shareable, fl_ctx: FLContext
+            self, dataset_name: str, feature_name: str, metric_config: MetricConfig, inputs: Shareable,
+            fl_ctx: FLContext
     ) -> Histogram:
         global_min_value = inputs[StC.STATS_MIN][dataset_name][feature_name]
         global_max_value = inputs[StC.STATS_MAX][dataset_name][feature_name]
@@ -264,7 +278,8 @@ class StatisticsExecutor(Executor):
         return result
 
     def get_max_value(
-        self, dataset_name: str, feature_name: str, metric_config: MetricConfig, inputs: Shareable, fl_ctx: FLContext
+            self, dataset_name: str, feature_name: str, metric_config: MetricConfig, inputs: Shareable,
+            fl_ctx: FLContext
     ) -> float:
         """
         get randomized max value
@@ -278,7 +293,8 @@ class StatisticsExecutor(Executor):
             return user_bin_range[1]
 
     def get_min_value(
-        self, dataset_name: str, feature_name: str, metric_config: MetricConfig, inputs: Shareable, fl_ctx: FLContext
+            self, dataset_name: str, feature_name: str, metric_config: MetricConfig, inputs: Shareable,
+            fl_ctx: FLContext
     ) -> float:
         """
         get randomized min value
@@ -313,7 +329,7 @@ class StatisticsExecutor(Executor):
             raise Exception(err_msg)
 
     def get_bin_range(
-        self, feature_name: str, global_min_value: float, global_max_value: float, hist_config: dict
+            self, feature_name: str, global_min_value: float, global_max_value: float, hist_config: dict
     ) -> List[int]:
 
         global_bin_range = [global_min_value, global_max_value]

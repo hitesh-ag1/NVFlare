@@ -29,11 +29,14 @@ from nvflare.fuel.utils import fobs
 
 
 class StatisticsController(Controller):
-    def __init__(self,
-                 metric_configs: Dict[str, dict],
-                 writer_id: str,
-                 result_wait_timeout: int = 60,
-                 min_clients: Optional[int] = None):
+    def __init__(
+            self,
+            metric_configs: Dict[str, dict],
+            writer_id: str,
+            result_wait_timeout: int = 60,
+            precision=4,
+            min_clients: Optional[int] = None,
+    ):
         """
         Args:
             metric_configs: defines the input statistic metrics to be computed and each metric's configuration.
@@ -102,6 +105,7 @@ class StatisticsController(Controller):
         self.global_metrics = {}
         self.client_features = {}
         self.result_wait_timeout = result_wait_timeout
+        self.precision = precision
         self.min_clients = min_clients
         self.result_callback_fns: Dict[str, Callable] = {
             StC.STATS_1st_METRICS: self.results_cb,
@@ -129,10 +133,12 @@ class StatisticsController(Controller):
         self.metrics_task_flow(abort_signal, fl_ctx, StC.STATS_1st_METRICS)
         self.metrics_task_flow(abort_signal, fl_ctx, StC.STATS_2nd_METRICS)
 
-        if not self._wait_for_all_results(self.result_wait_timeout, self.min_clients, self.client_metrics, abort_signal):
+        if not self._wait_for_all_results(
+                self.result_wait_timeout, self.min_clients, self.client_metrics, abort_signal
+        ):
             return False
 
-        self.log_info("start post processing")
+        self.log_info(fl_ctx, "start post processing")
         self.post_fn(self.task_name, fl_ctx)
 
         self.log_info(fl_ctx, f"task {self.task_name} control flow end.")
@@ -167,7 +173,7 @@ class StatisticsController(Controller):
             abort_signal=abort_signal,
         )
 
-        self.global_metrics = get_global_stats(self.global_metrics, self.client_metrics, metric_task)
+        self.global_metrics = get_global_stats(self.global_metrics, self.client_metrics, metric_task, self.precision)
 
         self.log_info(fl_ctx, f"task {self.task_name} metrics_flow for {metric_task} flow end.")
 
@@ -312,11 +318,9 @@ class StatisticsController(Controller):
     def _get_result_cb(self, metric_task: str):
         return self.result_callback_fns[metric_task]
 
-    def _wait_for_all_results(self,
-                              result_wait_timeout: int,
-                              request_client_size: int,
-                              client_metrics: dict,
-                              abort_signal=None) -> bool:
+    def _wait_for_all_results(
+            self, result_wait_timeout: int, request_client_size: int, client_metrics: dict, abort_signal=None
+    ) -> bool:
 
         # record of each metric, number of clients processed
         metric_client_sizes = {}
