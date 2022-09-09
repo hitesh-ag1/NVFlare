@@ -53,7 +53,7 @@ stateDiagram-v2
 stateDiagram-v2
     Hub_Server: Hub Server
     [Started] --> Hub_Server: stop_fl.sh
-    admin_server --> admin_server: shutdown\
+    admin_server --> admin_server: shutdown
     admin_server --> join_state: stop
     admin_server --> ServerEngine: close
     state Hub_Server {
