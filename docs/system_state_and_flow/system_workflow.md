@@ -215,28 +215,48 @@ sequenceDiagram
 ```mermaid
 sequenceDiagram
     participant ClientRunner
-    participant Task_Data_Filters
-    participant Executor
-    participant Task_Result_Filters
-    participant ClientEngine
-    participant ClientRunManager
-    participant FederatedClient
-    participant Communicator
-    participant Server
-
         ClientRunner  ->> ClientRunner: init_run(app_root, args)
         loop over ClientRunner (while not ask to stop)
             ClientRunner  ->> ClientRunner: init_run(app_root, args)
             ClientRunner  ->> ClientEngine: new fl_ctx
             ClientRunner  ->> ClientRunner: task_fetch_interval= fetch_and_run_one_task(fl_ctx)
-            loop over ClientRunner ( fetch_and_run_one_task ) 
+            ClientRunner  ->> ClientRunner: time.sleep(task_fetch_interval) 
+        end
+   
+```
+## ClientRunner.fetch_and_run_one_task()
+
+```mermaid
+sequenceDiagram
+    participant ClientRunner
+    participant ClientEngine
+    participant ClientRunManager
+    participant FederatedClient
+    participant Communicator
+    participant Server
+ 
                 ClientRunner  ->> ClientRunManager:get_task_assignment(fl_ctx)
                 ClientRunManager  ->> FederatedClient:FederatedClient.fetch_task() -> pull_task() -> fetch_execute_task()
                 FederatedClient  ->> Communicator:getTask()
                 Communicator ->> Server : getTask() over grpc
                 Server ->> ClientRunner: Task
-                ClientRunner ->> ClientRunner: _process_task(Task)
-                loop over ClientRunner ( _process_task()) 
+                ClientRunner ->> ClientRunner: reply = _process_task(Task)
+                ClientRunner --> ClientRunManager: send_task_result
+                ClientRunManager --> FederatedClient: push_results
+                FederatedClient --> Communicator: submitUpdate
+                Communicator -> Server: grpc 
+  
+```
+
+## ClientRunner._process_task()
+
+```mermaid
+sequenceDiagram
+    participant ClientRunner
+    participant Task_Data_Filters
+    participant Executor
+    participant Task_Result_Filters
+  
                     ClientRunner ->> ClientRunner: executor = self.task_table.get(task.name)
                     loop over Task_Data_Filters (task data filters)
                         ClientRunner ->> Task_Data_Filters: process()
@@ -246,14 +266,6 @@ sequenceDiagram
                     loop over Task_Result_Filters (task data filters)
                         ClientRunner ->> Task_Result_Filters: process()
                     end
-                end
-                ClientRunner --> ClientRunManager: send_task_result
-                ClientRunManager --> FederatedClient: push_results
-                FederatedClient --> Communicator: submitUpdate
-                Communicator -> Server: grpc 
-            end
-                        
-            ClientRunner  ->> ClientRunner: time.sleep(task_fetch_interval) 
-        end
-   
+     
+  
 ```
