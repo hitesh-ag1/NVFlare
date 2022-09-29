@@ -210,7 +210,7 @@ sequenceDiagram
     ClientRunner  ->> ClientRunner: ClientRunner.run(app_root, args)
 ```
 
-## Client Runer
+## ClientRuner.run()
 
 ```mermaid
 sequenceDiagram
