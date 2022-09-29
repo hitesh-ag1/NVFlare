@@ -241,10 +241,10 @@ sequenceDiagram
                 Communicator ->> Server : getTask() over grpc
                 Server ->> ClientRunner: Task
                 ClientRunner ->> ClientRunner: reply = _process_task(Task)
-                ClientRunner --> ClientRunManager: send_task_result
-                ClientRunManager --> FederatedClient: push_results
-                FederatedClient --> Communicator: submitUpdate
-                Communicator -> Server: grpc 
+                ClientRunner ->> ClientRunManager: send_task_result
+                ClientRunManager ->> FederatedClient: push_results
+                FederatedClient ->> Communicator: submitUpdate
+                Communicator ->> Server: grpc 
   
 ```
 
@@ -257,15 +257,15 @@ sequenceDiagram
     participant Executor
     participant Task_Result_Filters
   
-                    ClientRunner ->> ClientRunner: executor = self.task_table.get(task.name)
-                    loop over Task_Data_Filters (task data filters)
-                        ClientRunner ->> Task_Data_Filters: process()
-                    end
-                    ClientRunner ->> Executor: executor.execute(task.name, task.data, fl_ctx, self.task_abort_signal)
-                    Executor ->> ClientRunner: reply 
-                    loop over Task_Result_Filters (task data filters)
-                        ClientRunner ->> Task_Result_Filters: process()
-                    end
+    ClientRunner ->> ClientRunner: executor = self.task_table.get(task.name)
+    loop over Task_Data_Filters (task data filters)
+            ClientRunner ->> Task_Data_Filters: process()
+    end
+    ClientRunner ->> Executor: executor.execute(task.name, task.data, fl_ctx, self.task_abort_signal)
+    Executor ->> ClientRunner: reply 
+    loop over Task_Result_Filters (task data filters)
+        ClientRunner ->> Task_Result_Filters: process()
+    end
      
   
 ```
