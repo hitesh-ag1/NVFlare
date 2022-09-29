@@ -258,12 +258,12 @@ sequenceDiagram
     participant Task_Result_Filters
   
     ClientRunner ->> ClientRunner: executor = self.task_table.get(task.name)
-    loop over Task_Data_Filters (task data filters)
+    loop over Task_Data_Filters 
             ClientRunner ->> Task_Data_Filters: process()
     end
     ClientRunner ->> Executor: executor.execute(task.name, task.data, fl_ctx, self.task_abort_signal)
     Executor ->> ClientRunner: reply 
-    loop over Task_Result_Filters (task data filters)
+    loop over Task_Result_Filters 
         ClientRunner ->> Task_Result_Filters: process()
     end
      
