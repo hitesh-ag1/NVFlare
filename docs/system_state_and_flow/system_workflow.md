@@ -117,6 +117,51 @@ stateDiagram-v2
     FL_Client --> [*]
 ```
 
+
+## FL Server: Server Start
+
+```mermaid
+sequenceDiagram
+    participant server_train.py
+    participant FLServerStarterConfiger
+    participant ServerDeployer
+    participant Workspace
+    participant FedAdminServer
+    
+    server_train.py ->> Workspace: create server workspace
+    server_train.py ->> FLServerStarterConfiger: configure()
+    server_train.py ->> ServerDeployer: deployer = conf.deployer
+    ServerDeployer ->>  ServerDeployer: fed_server = deployer.deploy(args)
+    server_train.py ->> server_train.py: FedAdminServer = create_admin_server(fed_server, ...)
+    server_train.py --> FedAdminServer: FedAdminServer.start()
+```
+
+## FL Server: ServerDeployer.deploy()
+
+```mermaid
+sequenceDiagram
+    participant ServerDeployer
+    participant FederatedServer
+    participant GRPC_Server
+    participant cleanup_thread
+    participant JobRunner
+    participant Thread
+ 
+    ServerDeployer ->>  ServerDeployer: FederatedServer = create_fl_server(args)
+    ServerDeployer ->>  FederatedServer: FederatedServer.deploy()
+    FederatedServer ->> GRPC_Server: create grpc server if not exists: grpc.server.start()
+    FederatedServer ->> cleanup_thread: cleanup_thread.start
+    ServerDeployer ->> JobRunner: create Job Runner
+    ServerDeployer ->> Workspace: create workspace 
+    ServerDeployer ->> RunManager: create run_manager
+    ServerDeployer ->> job_manager: get job_manager
+    ServerDeployer ->> FederatedServer: set run_manager, job_manager
+    ServerDeployer ->> RunManager: set JobRunner
+    ServerDeployer ->> Thread: JobRunner.start()
+     
+```
+
+
 # JOB Workflow
 
 After Submit the Job, the server Job Process
@@ -130,7 +175,7 @@ sequenceDiagram
     participant RunManager
     participant ServerEngine 
     participant ServerRunner 
-    
+     
     Fed_Server->> Workspace: create server workspace
     Fed_Server->> RunManager: create & Set runner manager, and set event handler,set server_runner 
     Fed_Server->> ServerEngine: set runner manager, set FLContext
