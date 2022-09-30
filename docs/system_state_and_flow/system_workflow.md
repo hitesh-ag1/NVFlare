@@ -164,7 +164,27 @@ sequenceDiagram
 
 # JOB Workflow
 
-After Submit the Job, the server Job Process
+## Submit Job: Console Side (Client)
+
+```mermaid
+sequenceDiagram
+    participant AdminClient(cmd.CMD)
+    participant AdminAPI 
+    participant Socket 
+    
+    AdminClient(cmd.CMD)->> AdminClient(cmd.CMD) : do_default(line) (in cli.py)
+    AdminClient(cmd.CMD)->> AdminAPI : resp = api.do_command(line)
+    alt cmd type is client
+        AdminAPI ->> AdminAPI: _do_client_command
+    else
+        AdminAPI ->> AdminAPI: server_execute
+        AdminAPI ->> Socket: _send_to_sock
+    end
+```
+
+## Submit Job: Server Side
+ TODO
+
 
 ## FL Server: Federated Server Process
 
@@ -284,12 +304,12 @@ sequenceDiagram
                 ClientRunManager  ->> FederatedClient:FederatedClient.fetch_task() -> pull_task() -> fetch_execute_task()
                 FederatedClient  ->> Communicator:getTask()
                 Communicator ->> Server : getTask() over grpc
-                Server ->> ClientRunner: Task
+                Server -->> ClientRunner: Task
                 ClientRunner ->> ClientRunner: reply = _process_task(Task)
                 ClientRunner ->> ClientRunManager: send_task_result
                 ClientRunManager ->> FederatedClient: push_results
                 FederatedClient ->> Communicator: submitUpdate
-                Communicator ->> Server: grpc 
+                Communicator -) Server: grpc 
   
 ```
 
