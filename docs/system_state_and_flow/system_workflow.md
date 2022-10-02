@@ -131,6 +131,7 @@ sequenceDiagram
     server_train.py ->> Workspace: create server workspace
     server_train.py ->> FLServerStarterConfiger: configure()
     server_train.py ->> ServerDeployer: deployer = conf.deployer
+    note over ServerDeployer : ServerCommandModules is registed 
     ServerDeployer ->>  ServerDeployer: fed_server = deployer.deploy(args)
     server_train.py ->> server_train.py: FedAdminServer = create_admin_server(fed_server, ...)
     server_train.py --> FedAdminServer: FedAdminServer.start()
@@ -175,7 +176,7 @@ sequenceDiagram
    
     participant Socket 
     
-    AdminClient(cmd.CMD)->> AdminClient(cmd.CMD) : do_default(line) (in cli.py)
+    aAdminClient(cmd.CMD)->> AdminClient(cmd.CMD) : do_default(line) (in nvflare.fuel.hci.client.cli.py)
     AdminClient(cmd.CMD)->> AdminAPI : resp = api.do_command(line)
     alt cmd type is client
         AdminAPI ->> AdminAPI: _do_client_command
@@ -194,8 +195,76 @@ sequenceDiagram
 ```
 
 ## Submit Job: Server Side
- TODO
 
+```mermaid
+sequenceDiagram
+    participant FedAdminServer
+    note over FedAdminServer:  subclass of AdminServer and AdminServer(socketserver.ThreadingTCPServer):
+    participant _MsgHandler
+    note over _MsgHandler:  _MsgHandler(socketserver.BaseRequestHandler) in fuel.hci.seer.hci.py handles Socket message
+    participant ServerCommandRegister
+    participant JobCommandModule
+    participant Connection
+    participant ServerEngine
+    participant SimpleJobDefManager
+    participant FilesystemStorage
+    
+    
+    FedAdminServer ->> ServerCommandRegister: _do_command()  
+    ServerCommandRegister ->> ServerCommandRegister: JobCommandModule.handler(handler(conn, args)
+    ServerCommandRegister ->> JobCommandModule: submit_job(): unzip folder, 
+    JobCommandModule ->> Connection :  engine = conn.app_ctx
+    JobCommandModule ->> ServerEngine: job_def_manager = engine.job_def_manager
+    JobCommandModule ->> SimpleJobDefManager: meta = job_def_manager.create(meta, data_bytes, fl_ctx)
+    SimpleJobDefManager ->>  SimpleJobDefManager : store = get_job_store(fl_ctx):
+    SimpleJobDefManager ->> FilesystemStorage :  create_object( job_data)
+     
+```
+## Dispatch Job: JobRunner.run()
+ * check, schedule and run jobs
+
+```mermaid
+sequenceDiagram
+    participant JobRunner
+    participant Engine
+    participant Thread
+    participant DefaultJobScheduler
+    participant FedAdminServer
+    participant ServerEngine
+    
+    loop over not ask_to_stop
+        JobRunner ->> JobRunner : run
+        JobRunner ->> Thread : start()
+        JobRunner ->> Engine : getComponent(JOB_MANAGER)
+        JobRunner ->> SimpleJobDefManager: job_manager.get_jobs_by_status(RunStatus.SUBMITTED, fl_ctx)
+        SimpleJobDefManager ->> SimpleJobDefManager: _scan(filter, job_store)
+        SimpleJobDefManager -->> JobRunner: approved_jobs
+        JobRunner ->> DefaultJobScheduler: schedule_job(approved_jobs)
+        loop over job_candidates
+            DefaultJobScheduler ->> DefaultJobScheduler: _try_job(job, fl_ctx): map sites to app; 
+        end
+        loop over available_sites
+            DefaultJobScheduler ->> DefaultJobScheduler: _check_client_resources(resource_reqs, fl_ctx)
+        end 
+        
+        JobRunner ->> JobRunner: _deploy_job(ready_job, sites, fl_ctx)
+        loop over app and sites: 
+            JobRunner -> AppDeployer: deploy to server if site is server 
+            JobRunner -> JobRunner: prepare client_deploy_requests
+        end
+        JobRunner ->> FedAdminServer: send_requests_and_get_reply_dict(client_deploy_requests)
+
+        loop over client_deploy_requests: 
+            JobRunner -> JobRunner : check reply message
+        end
+        
+        JobRunner ->> JobRunner: _start_run(job_id,ready_job,deployable_clients,fl_ctx)
+        JobRunner ->> ServerEngine : start_app_on_server()
+        JobRunner ->> JobRunner:  time.sleep(1.0)
+    end
+    
+    
+```
 
 ## FL Server: Federated Server Process
 
