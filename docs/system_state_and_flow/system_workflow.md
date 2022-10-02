@@ -112,10 +112,7 @@ stateDiagram-v2
 
 ### FL Client Stop
 
-```mermaid
-stateDiagram-v2
-    FL_Client --> [*]
-```
+Todo
 
 
 ## FL Server: Server Start
