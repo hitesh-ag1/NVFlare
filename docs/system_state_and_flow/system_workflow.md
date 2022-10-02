@@ -179,8 +179,8 @@ sequenceDiagram
     AdminClient(cmd.CMD)->> AdminAPI : resp = api.do_command(line)
     alt cmd type is client
         AdminAPI ->> AdminAPI: _do_client_command
-        AdminAPI ->> FileTransferModule: handler(args, ctx): submit_job's handler is FileTransferModule.upload_foler()
-        FileTransferModule ->> FileTransferModule: upload_folder(), extra command and zip job folder, base64 encoded
+        AdminAPI ->> FileTransferModule: handler(args, ctx): submit_job's handler is FileTransferModule.upload_folder()
+        FileTransferModule ->> FileTransferModule: upload_folder(), extrat command, zip job folder and base64 encode
         FileTransferModule ->> AdminAPI: server_execute(command)
         AdminAPI ->> Socket: _send_to_sock
         Socket -->> FileTransferModule: result
