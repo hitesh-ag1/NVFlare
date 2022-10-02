@@ -258,6 +258,7 @@ sequenceDiagram
         JobRunner ->> JobRunner: _start_run(job_id,ready_job,deployable_clients,fl_ctx)
         JobRunner ->> ServerEngine : start_app_on_server()
         JobRunner ->> JobRunner:  time.sleep(1.0)
+        note right of JobRunner: JobRunner sleep 1 second before next job scan 
     end
     
     
