@@ -362,6 +362,8 @@ sequenceDiagram
             ClientRunner  ->> ClientRunner: init_run(app_root, args)
             ClientRunner  ->> ClientEngine: new fl_ctx
             ClientRunner  ->> ClientRunner: task_fetch_interval= fetch_and_run_one_task(fl_ctx)
+            note right of ClientRunner: task_fetch_interval is default to 0.1 seconds (version 2.2) and 5 seconds (version 2.1)
+            note right of ClientRunner: task_fetch_interval user can configure via controller in version 2.2
             ClientRunner  ->> ClientRunner: time.sleep(task_fetch_interval) 
         end
    
