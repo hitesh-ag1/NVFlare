@@ -164,20 +164,31 @@ sequenceDiagram
 
 # JOB Workflow
 
-## Submit Job: Console Side (Client)
+## Submit Job: Admin Client
 
 ```mermaid
 sequenceDiagram
     participant AdminClient(cmd.CMD)
     participant AdminAPI 
+    participant FileTransferModule
+    Note over FileTransferModule: CommandModules were pre-registed, each CommandModule has a command name map to a handler function. FileTransferModule is one of CommandModule   
+   
     participant Socket 
     
     AdminClient(cmd.CMD)->> AdminClient(cmd.CMD) : do_default(line) (in cli.py)
     AdminClient(cmd.CMD)->> AdminAPI : resp = api.do_command(line)
     alt cmd type is client
         AdminAPI ->> AdminAPI: _do_client_command
+        AdminAPI ->> FileTransferModule: handler(args, ctx): submit_job's handler is FileTransferModule.upload_foler()
+        FileTransferModule ->> FileTransferModule: upload_folder(), extra command and zip job folder, base64 encoded
+        FileTransferModule ->> AdminAPI: server_execute(command)
+        AdminAPI ->> Socket: _send_to_sock
+        Socket -->> FileTransferModule: result
+        FileTransferModule -->> AdminAPI: result
+        
     else
         AdminAPI ->> AdminAPI: server_execute
+        note over AdminAPI, Socket : steps omitted 
         AdminAPI ->> Socket: _send_to_sock
     end
 ```
