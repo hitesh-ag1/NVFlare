@@ -249,13 +249,13 @@ sequenceDiagram
         
         JobRunner ->> JobRunner: _deploy_job(ready_job, sites, fl_ctx)
         loop over app and sites: 
-            JobRunner -> AppDeployer: deploy to server if site is server 
-            JobRunner -> JobRunner: prepare client_deploy_requests
+            JobRunner ->> AppDeployer: deploy to server if site is server 
+            JobRunner ->> JobRunner: prepare client_deploy_requests
         end
         JobRunner ->> FedAdminServer: send_requests_and_get_reply_dict(client_deploy_requests)
 
         loop over client_deploy_requests: 
-            JobRunner -> JobRunner : check reply message
+            JobRunner ->> JobRunner : check reply message
         end
         
         JobRunner ->> JobRunner: _start_run(job_id,ready_job,deployable_clients,fl_ctx)
