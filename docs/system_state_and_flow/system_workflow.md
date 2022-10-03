@@ -256,9 +256,28 @@ sequenceDiagram
         end
         
         JobRunner ->> JobRunner: _start_run(job_id,ready_job,deployable_clients,fl_ctx)
-        JobRunner ->> ServerEngine : start_app_on_server()
         JobRunner ->> JobRunner:  time.sleep(1.0)
         note right of JobRunner: JobRunner sleep 1 second before next job scan 
+    end
+    
+    
+```
+# Run Job: JobRunner._start_run()
+* run job
+
+```mermaid
+sequenceDiagram
+    participant JobRunner
+    participant ServerEngine
+    
+    JobRunner ->> ServerEngine: job_clients = fl_ctx.get_engine().get_job_clients(client_sites)
+    JobRunner ->> ServerEngine: engine.start_app_on_server(job_id, job_id=job.job_id, job_clients=job_clients)
+    ServerEngine -->> JobRunner:  replies = engine.start_client_job(job_id, client_sites)
+    ServerEngine -->> ServerEngine:  replies = engine.start_client_job(job_id, client_sites)
+    ServerEngine -->> FedAdminServer:  send_requests("START_JOB")
+    note right of Client: This is inside send_requests
+    loop over requests (each request token = one client)
+            FedAdminServer -->> Client:  client.fire_and_forget(reqs)
     end
     
     

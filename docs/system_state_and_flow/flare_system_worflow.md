@@ -28,17 +28,20 @@ Todo
 ## Dispatch Job: JobRunner.run()
  * check, schedule and run jobs
 ![diagram](./flare_system_worflow-8.svg)
-## FL Server: Federated Server Process
+# Run Job: JobRunner._start_run()
+* run job
 ![diagram](./flare_system_worflow-9.svg)
-## FL Server: Job Child Process
+## FL Server: Federated Server Process
 ![diagram](./flare_system_worflow-10.svg)
-## FL Client Job Process
+## FL Server: Job Child Process
 ![diagram](./flare_system_worflow-11.svg)
-## FL Client Job Worker Process
+## FL Client Job Process
 ![diagram](./flare_system_worflow-12.svg)
-## ClientRuner.run()
+## FL Client Job Worker Process
 ![diagram](./flare_system_worflow-13.svg)
-## ClientRunner.fetch_and_run_one_task()
+## ClientRuner.run()
 ![diagram](./flare_system_worflow-14.svg)
-## ClientRunner._process_task()
+## ClientRunner.fetch_and_run_one_task()
 ![diagram](./flare_system_worflow-15.svg)
+## ClientRunner._process_task()
+![diagram](./flare_system_worflow-16.svg)
