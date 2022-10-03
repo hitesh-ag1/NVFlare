@@ -119,17 +119,22 @@ Todo
 
 ```mermaid
 sequenceDiagram
+   autonumber
     participant server_train.py
     participant FLServerStarterConfiger
     participant ServerDeployer
     participant Workspace
     participant FedAdminServer
-    
+     
     server_train.py ->> Workspace: create server workspace
-    server_train.py ->> FLServerStarterConfiger: configure()
-    server_train.py ->> ServerDeployer: deployer = conf.deployer
+    server_train.py ->>FLServerStarterConfiger: configure()
+    activate FLServerStarterConfiger
+    FLServerStarterConfiger -->> server_train.py: 
+    deactivate FLServerStarterConfiger
+    
     note over ServerDeployer : ServerCommandModules is registed 
-    ServerDeployer ->>  ServerDeployer: fed_server = deployer.deploy(args)
+    server_train.py ->> server_train.py: deployer = conf.deployer, fed_server = deployer.deploy(args)
+    ServerDeployer -->> server_train.py: FederatedServer = ServerDeployer.create_fl_server()
     server_train.py ->> server_train.py: FedAdminServer = create_admin_server(fed_server, ...)
     server_train.py --> FedAdminServer: FedAdminServer.start()
 ```
@@ -138,8 +143,10 @@ sequenceDiagram
 
 ```mermaid
 sequenceDiagram
+    autonumber
     participant ServerDeployer
     participant FederatedServer
+    participant BaseServer
     participant GRPC_Server
     participant cleanup_thread
     participant JobRunner
@@ -147,8 +154,15 @@ sequenceDiagram
  
     ServerDeployer ->>  ServerDeployer: FederatedServer = create_fl_server(args)
     ServerDeployer ->>  FederatedServer: FederatedServer.deploy()
-    FederatedServer ->> GRPC_Server: create grpc server if not exists: grpc.server.start()
+    activate FederatedServer
+    FederatedServer ->> GRPC_Server: create grpc server if not exists
+    activate GRPC_Server
+    FederatedServer ->> GRPC_Server : grpc.server.start(): 
+    GRPC_Server -->> FederatedServer: 
+    deactivate GRPC_Server
     FederatedServer ->> cleanup_thread: cleanup_thread.start
+    deactivate FederatedServer
+    
     ServerDeployer ->> JobRunner: create Job Runner
     ServerDeployer ->> Workspace: create workspace 
     ServerDeployer ->> RunManager: create run_manager
@@ -166,6 +180,7 @@ sequenceDiagram
 
 ```mermaid
 sequenceDiagram
+    autonumber
     participant AdminClient(cmd.CMD)
     participant AdminAPI 
     participant FileTransferModule
@@ -173,28 +188,35 @@ sequenceDiagram
    
     participant Socket 
     
-    aAdminClient(cmd.CMD)->> AdminClient(cmd.CMD) : do_default(line) (in nvflare.fuel.hci.client.cli.py)
+    AdminClient(cmd.CMD)->> AdminClient(cmd.CMD) : do_default(line) (in nvflare.fuel.hci.client.cli.py)
     AdminClient(cmd.CMD)->> AdminAPI : resp = api.do_command(line)
+    activate AdminAPI
     alt cmd type is client
         AdminAPI ->> AdminAPI: _do_client_command
         AdminAPI ->> FileTransferModule: handler(args, ctx): submit_job's handler is FileTransferModule.upload_folder()
+        activate FileTransferModule
         FileTransferModule ->> FileTransferModule: upload_folder(), extrat command, zip job folder and base64 encode
         FileTransferModule ->> AdminAPI: server_execute(command)
         AdminAPI ->> Socket: _send_to_sock
+        activate Socket
         Socket -->> FileTransferModule: result
+        deactivate Socket
         FileTransferModule -->> AdminAPI: result
+        deactivate FileTransferModule
         
     else
         AdminAPI ->> AdminAPI: server_execute
         note over AdminAPI, Socket : steps omitted 
         AdminAPI ->> Socket: _send_to_sock
     end
+    deactivate AdminAPI    
 ```
 
 ## Submit Job: Server Side
 
 ```mermaid
 sequenceDiagram
+    autonumber
     participant FedAdminServer
     note over FedAdminServer:  subclass of AdminServer and AdminServer(socketserver.ThreadingTCPServer):
     participant _MsgHandler
@@ -222,6 +244,7 @@ sequenceDiagram
 
 ```mermaid
 sequenceDiagram
+    autonumber
     participant JobRunner
     participant Engine
     participant Thread
@@ -234,15 +257,20 @@ sequenceDiagram
         JobRunner ->> Thread : start()
         JobRunner ->> Engine : getComponent(JOB_MANAGER)
         JobRunner ->> SimpleJobDefManager: job_manager.get_jobs_by_status(RunStatus.SUBMITTED, fl_ctx)
+        activate SimpleJobDefManager
         SimpleJobDefManager ->> SimpleJobDefManager: _scan(filter, job_store)
         SimpleJobDefManager -->> JobRunner: approved_jobs
+        deactivate SimpleJobDefManager
+        
         JobRunner ->> DefaultJobScheduler: schedule_job(approved_jobs)
+        activate DefaultJobScheduler
         loop over job_candidates
             DefaultJobScheduler ->> DefaultJobScheduler: _try_job(job, fl_ctx): map sites to app; 
         end
         loop over available_sites
             DefaultJobScheduler ->> DefaultJobScheduler: _check_client_resources(resource_reqs, fl_ctx)
         end 
+        deactivate DefaultJobScheduler
         
         JobRunner ->> JobRunner: _deploy_job(ready_job, sites, fl_ctx)
         loop over app and sites: 
