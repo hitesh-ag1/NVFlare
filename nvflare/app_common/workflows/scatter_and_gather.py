@@ -41,6 +41,8 @@ class ScatterAndGather(Controller):
     def __init__(
         self,
         min_clients: int = 1,
+    pass
+
         num_rounds: int = 5,
         start_round: int = 0,
         wait_time_after_min_received: int = 10,
