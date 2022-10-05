@@ -148,7 +148,7 @@ class CyclicController(Controller):
 
         # update the global learnable with the received result (shareable)
         # e.g. the received result could be weight_diffs, the learnable could be full weights.
-        self._last_learnable = self.shareable_generator.shareable_to_learnable(client_task.result, fl_ctx)
+        self._last_learnable = self.shareable_generator.update_model(client_task.result, fl_ctx)
 
         # prepare task shareable data for next client
         task.data = self.shareable_generator.learnable_to_shareable(self._last_learnable, fl_ctx)

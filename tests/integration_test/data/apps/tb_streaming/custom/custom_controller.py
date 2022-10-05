@@ -111,7 +111,7 @@ class CustomController(Controller):
             )
             self.log_info(fl_ctx, f"@@@ Broadcast and wait - end {task.name}")
 
-            self._global_model = self.shareable_gen.shareable_to_learnable(task.data, fl_ctx)
+            self._global_model = self.shareable_gen.update_model(task.data, fl_ctx)
             self.persistor.save(self._global_model, fl_ctx)
 
             self.logger.info("model saved")

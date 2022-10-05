@@ -41,6 +41,8 @@ class ScatterAndGather(Controller):
     def __init__(
         self,
         min_clients: int = 1,
+    pass
+
         num_rounds: int = 5,
         start_round: int = 0,
         wait_time_after_min_received: int = 10,
@@ -233,7 +235,7 @@ class ScatterAndGather(Controller):
                     return
 
                 self.fire_event(AppEventType.BEFORE_SHAREABLE_TO_LEARNABLE, fl_ctx)
-                self._global_weights = self.shareable_gen.shareable_to_learnable(aggr_result, fl_ctx)
+                self._global_weights = self.shareable_gen.update_model(aggr_result, fl_ctx)
                 fl_ctx.set_prop(AppConstants.GLOBAL_MODEL, self._global_weights, private=True, sticky=False)
                 fl_ctx.sync_sticky()
                 self.fire_event(AppEventType.AFTER_SHAREABLE_TO_LEARNABLE, fl_ctx)

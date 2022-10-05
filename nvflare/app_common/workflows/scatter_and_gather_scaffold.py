@@ -187,7 +187,7 @@ class ScatterAndGatherScaffold(ScatterAndGather):
 
                 # update global model using shareable generator
                 self.fire_event(AppEventType.BEFORE_SHAREABLE_TO_LEARNABLE, fl_ctx)
-                self._global_weights = self.shareable_gen.shareable_to_learnable(dxo_aggr_result.to_shareable(), fl_ctx)
+                self._global_weights = self.shareable_gen.update_model(dxo_aggr_result.to_shareable(), fl_ctx)
 
                 # update SCAFFOLD global controls
                 ctr_diff = dxo_ctrl_aggr_result.data
