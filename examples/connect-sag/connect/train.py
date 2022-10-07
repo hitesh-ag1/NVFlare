@@ -1,11 +1,8 @@
 import base64
+import os.path
+from typing import io
 
 from nvflare.app_common.app_constant import AppConstants
-
-from nvflare.app_common.connect.api.connector import Connector
-
-connector = Connector()
-
 
 def load_initial_global_model():
     return {}
@@ -27,8 +24,8 @@ def prepare_inputs(_global_weights, current_round, total_rounds):
 def update_model(aggr_result):
     return dict()
 
-
-def broadcast_and_wait(input: dict):
+def broadcast_and_wait(inputs: dict):
+    from nvflare.fuel.hci.client.api import
     return {}
 
 
@@ -43,7 +40,6 @@ def train():
     wait_time_after_min_received = 0
     task_name = "train"
     train_timeout = 6000
-    _global_weights = None
     _global_weights = load_initial_global_model()
 
     for current_round in range (start_round, total_rounds):
@@ -60,16 +56,11 @@ def train():
 
         print(f"Round {current_round} finished.")
 
-
 def setup():
     # ask Server Service to create a coordinator specific for this job
     # serialize client code adn transfer client files to server and ask
     # Server Service to deploy Client Executors and executor ids
-    inputs = dict()
-    inputs["app"] = "sag"
-    base64.encode("client codes to bytes", o)
-    inputs["client_code"] = o
-    connector.setup(inputs)
+    pass
 
 def main():
     setup()
