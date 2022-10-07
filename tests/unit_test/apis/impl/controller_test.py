@@ -96,7 +96,7 @@ def launch_task(controller, method, task, fl_ctx, kwargs):
     if method == "broadcast":
         controller.broadcast(task=task, fl_ctx=fl_ctx, **kwargs)
     elif method == "broadcast_and_wait":
-        controller.broadcast_and_wait(task=task, fl_ctx=fl_ctx, **kwargs)
+        controller.broadcast(task=task, fl_ctx=fl_ctx, **kwargs)
     elif method == "send":
         controller.send(task=task, fl_ctx=fl_ctx, **kwargs)
     elif method == "send_and_wait":
