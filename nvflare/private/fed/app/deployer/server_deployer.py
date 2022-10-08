@@ -18,6 +18,8 @@ import threading
 from nvflare.apis.event_type import EventType
 from nvflare.apis.fl_constant import SystemComponents
 from nvflare.apis.workspace import Workspace
+from nvflare.private.fed.app.connect.connect_server import ConnectServer
+from nvflare.private.fed.app.connect.connect_server_req_handler import ConnectServerReqHandler
 from nvflare.private.fed.server.fed_server import FederatedServer
 from nvflare.private.fed.server.job_runner import JobRunner
 from nvflare.private.fed.server.run_manager import RunManager
@@ -119,12 +121,19 @@ class ServerDeployer:
 
         threading.Thread(target=self._start_job_runner, args=[job_runner, fl_ctx]).start()
 
+        threading.Thread(target=self._start_connect_server, args=[]).start()
+
         services.engine.fire_event(EventType.SYSTEM_START, services.engine.new_context())
         print("deployed FL server trainer.")
         return services
 
     def _start_job_runner(self, job_runner, fl_ctx):
         job_runner.run(fl_ctx)
+
+    def _start_connect_server(self):
+        connect_server = ConnectServer("0.0.0.0", 9999)
+
+        connect_server.start()
 
     def close(self):
         """To close the services."""

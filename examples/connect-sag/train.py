@@ -3,30 +3,20 @@ import os.path
 from typing import io
 
 from nvflare.app_common.app_constant import AppConstants
+from nvflare.private.fed.app.connect.connect_api import ConnectAPI
+
 
 def load_initial_global_model():
     return {}
 
 
-def prepare_inputs(_global_weights, current_round, total_rounds):
-    inputs = dict()
-    inputs["global_weights"] = _global_weights
-    inputs.update({
-                     AppConstants.CURRENT_ROUND: current_round,
-                     AppConstants.NUM_ROUNDS: total_rounds
-                     AppConstants.CONTRIBUTION_ROUND: current_round
-                   }
-                  )
-
-    return inputs
-
-
 def update_model(aggr_result):
     return dict()
 
-def broadcast_and_wait(inputs: dict):
-    from nvflare.fuel.hci.client.api import
-    return {}
+
+def broadcast(inputs: dict):
+    conn_api = ConnectAPI()
+    return conn_api.broadcast(inputs)
 
 
 def aggregate(client_results):
@@ -42,25 +32,31 @@ def train():
     train_timeout = 6000
     _global_weights = load_initial_global_model()
 
-    for current_round in range (start_round, total_rounds):
-
+    for current_round in range(start_round, total_rounds):
         print(f"Round {current_round} started.")
         # Create train_task
-        inputs: dict = prepare_inputs(_global_weights, current_round, total_rounds)
+        inputs = {
+            "global_weights": _global_weights,
+            AppConstants.CURRENT_ROUND: current_round,
+            AppConstants.NUM_ROUNDS: total_rounds,
+            AppConstants.CONTRIBUTION_ROUND: current_round,
+            "task_name": task_name,
+            "wait_time_after_min_received": wait_time_after_min_received,
+            "train_timeout": train_timeout,
+            "min_clients": min_clients
+        }
 
-        client_results = broadcast_and_wait(inputs)
-
-        aggr_result = aggregate(client_results)
-
-        _global_weights = update_model(aggr_result)
-
+        client_results = broadcast(inputs)
+        print(client_results)
         print(f"Round {current_round} finished.")
+
 
 def setup():
     # ask Server Service to create a coordinator specific for this job
     # serialize client code adn transfer client files to server and ask
     # Server Service to deploy Client Executors and executor ids
     pass
+
 
 def main():
     setup()
