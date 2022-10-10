@@ -34,13 +34,14 @@ from .bcast_manager import BcastForeverTaskManager, BcastTaskManager
 from .send_manager import SendTaskManager
 from .seq_relay_manager import SequentialRelayTaskManager
 from .task_manager import TaskCheckStatus, TaskManager
+from ..operator_spec import Operator
 
 _TASK_KEY_ENGINE = "___engine"
 _TASK_KEY_MANAGER = "___mgr"
 _TASK_KEY_DONE = "___done"
 
 
-class Operator(ABC):
+class Relay(Operator, ABC):
     def __init__(self, task_check_period=0.5):
         """Manage life cycles of tasks and their destinations.
 
@@ -353,9 +354,6 @@ class Operator(ABC):
         Raises:
             ValueError: min_responses is greater than the length of targets since this condition will make the task, if allowed to be scheduled, never exit.
         """
-        _check_inputs(task=task, fl_ctx=fl_ctx, targets=targets)
-        _check_positive_int("min_responses", min_responses)
-        _check_positive_int("wait_time_after_min_received", wait_time_after_min_received)
         if targets and min_responses > len(targets):
             raise ValueError(
                 "min_responses ({}) must be less than length of targets ({}).".format(min_responses, len(targets))

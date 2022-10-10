@@ -13,6 +13,15 @@ class ConnectServerReqHandler(socketserver.BaseRequestHandler):
     override the handle() method to implement communication to the
     client.
     """
+    def __init__(self, request, client_address, server, fed_server):
+        super().__init__(request, client_address, server)
+        self.fed_server = fed_server
+
+    def setup(self):
+        pass
+
+    def finish(self):
+        pass
 
     def get_action_handler(self):
         return {
@@ -31,7 +40,7 @@ class ConnectServerReqHandler(socketserver.BaseRequestHandler):
             parameters = content["parameters"]
             action_handler = self.get_action_handler().get(action, None)
             if action_handler:
-                threading.Thread(target=action_handler, args=[parameters, self.request]).start()
+                threading.Thread(target=action_handler, args=[parameters, self.request, self.fed_server]).start()
 
         # just send back the same data, but upper-cased
         # self.request.sendall(received)

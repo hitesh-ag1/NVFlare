@@ -121,7 +121,7 @@ class ServerDeployer:
 
         threading.Thread(target=self._start_job_runner, args=[job_runner, fl_ctx]).start()
 
-        threading.Thread(target=self._start_connect_server, args=[]).start()
+        threading.Thread(target=self._start_connect_server, args=[services]).start()
 
         services.engine.fire_event(EventType.SYSTEM_START, services.engine.new_context())
         print("deployed FL server trainer.")
@@ -130,8 +130,8 @@ class ServerDeployer:
     def _start_job_runner(self, job_runner, fl_ctx):
         job_runner.run(fl_ctx)
 
-    def _start_connect_server(self):
-        connect_server = ConnectServer("0.0.0.0", 9999)
+    def _start_connect_server(self, fed_server):
+        connect_server = ConnectServer("0.0.0.0", 9999, fed_server)
 
         connect_server.start()
 
