@@ -75,7 +75,8 @@ class Broadcast(Operator):
             self,
             task: Task,
             fl_ctx: FLContext,
-            targets: Union[List[Client], List[str], None] = None,
+            # targets: Union[List[Client], List[str], None] = None,
+            targets: Optional[List[str], None] = None,
             min_responses: int = 1,
             wait_time_after_min_received: int = 0,
     ):

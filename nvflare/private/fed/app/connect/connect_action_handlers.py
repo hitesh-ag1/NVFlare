@@ -16,6 +16,7 @@ from nvflare.app_common.app_constant import StatisticsConstants as StC
 from nvflare.app_common.statistics.numeric_stats import get_global_stats
 from nvflare.app_common.statistics.statisitcs_objects_decomposer import fobs_registration
 from nvflare.fuel.utils import fobs
+from .messaage import create_message, unpack_message
 from nvflare.private.fed.server.fed_server import FederatedServer
 
 
@@ -23,19 +24,21 @@ def broadcast_handler(parameters: dict, request, fed_server: FederatedServer):
     print(parameters)
 
     broadcast_op = Broadcast(fed_server.fl_ctx)
-    broadcast_op.op(parameters, result_received_cb)
+    client_task = broadcast_op.op(parameters, result_received_cb)
 
-    request.sendall(b"broadcast parameters")
+    client_name = client_task.client.name
+    task_name = client_task.task.name
+    client_task_results = {
+        "client": client_name,
+        "task": task_name,
+        "result": client_task.result
+    }
+    result = client_task.result
+    response_in_bytes = create_message(client_task_results, "text/json", "utf-8")
+    client_task.result = None
+    request.sendall(response_in_bytes)
 
 
 def result_received_cb(client_task: ClientTask, fl_ctx: FLContext):
-    """Signature of result_received CB.
-
-    Called after a result is received from a client
-
-    Args:
-        client_task: the client task that the result is for
-        fl_ctx: the FL context that comes with the client's result submission
-
-    """
-    pass
+    print(f"Processing {client_task.task.name} result_received_cb from client { client_task.client.name}")
+    return client_task
