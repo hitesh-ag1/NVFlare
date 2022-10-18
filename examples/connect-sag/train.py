@@ -43,7 +43,9 @@ def train():
             "nvflare.task.name": task_name,
             "nvflare.task.wait_time_after_min_received": wait_time_after_min_received,
             "nvflare.task.timeout": train_timeout,
-            "nvflare.task.client.min_responses": min_clients
+            "nvflare.task.client.min_responses": min_clients,
+            "nvflare.task.client.executor.id": "NPTrainer",
+            "nvflare.task.client.deploy.map": {"deploy": "*"}
         }
 
         client_results = broadcast(inputs)
