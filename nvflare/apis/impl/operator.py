@@ -1,14 +1,13 @@
-from abc import ABC
-from ctypes import Union
 import time
-from typing import List
+from abc import ABC
+from threading import Lock
+from typing import List, Optional
 
 from nvflare.apis.client import Client
 from nvflare.apis.controller_spec import Task
 from nvflare.apis.fl_context import FLContext
 from nvflare.apis.impl.task_manager import TaskManager
 from nvflare.apis.operator_spec import OperatorSpec
-from threading import Lock
 
 # todo move this to a constant file and shared by Controller
 
@@ -29,9 +28,10 @@ class Operator(OperatorSpec, ABC):
             task: Task,
             fl_ctx: FLContext,
             manager: TaskManager,
-            targets: Union[List[Client], List[str], None],
+            targets: Optional[List[str]],
             allow_dup_targets: bool = False,
     ):
+
         if task.schedule_time is not None:
             # this task was scheduled before
             # we do not allow a task object to be reused
@@ -63,3 +63,4 @@ class Operator(OperatorSpec, ABC):
         with self._task_lock:
             self._tasks.append(task)
             self.log_info(fl_ctx, "scheduled task {}".format(task.name))
+

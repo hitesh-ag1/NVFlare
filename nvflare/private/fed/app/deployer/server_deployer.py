@@ -132,7 +132,6 @@ class ServerDeployer:
 
     def _start_connect_server(self, fed_server):
         connect_server = ConnectServer("0.0.0.0", 9999, fed_server)
-
         connect_server.start()
 
     def close(self):

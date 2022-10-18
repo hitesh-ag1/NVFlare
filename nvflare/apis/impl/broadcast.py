@@ -12,33 +12,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import threading
-import time
-from abc import ABC
-from threading import Lock
-from typing import List, Optional, Tuple, Union
+from typing import List, Optional, Union
 
 from nvflare.apis.client import Client
-from nvflare.apis.controller_spec import ClientTask, ControllerSpec, SendOrder, Task, TaskCompletionStatus
-from nvflare.apis.fl_constant import FLContextKey, ReservedTopic
+from nvflare.apis.controller_spec import Task
 from nvflare.apis.fl_context import FLContext
-from nvflare.apis.responder import Responder
-from nvflare.apis.server_engine_spec import ServerEngineSpec
 from nvflare.apis.shareable import Shareable
-from nvflare.apis.signal import Signal
-from nvflare.security.logging import secure_format_exception
-from nvflare.widgets.info_collector import GroupInfoCollector, InfoCollector
-
-from .any_relay_manager import AnyRelayTaskManager
-from .bcast_manager import BcastForeverTaskManager, BcastTaskManager
+from .bcast_manager import BcastTaskManager
 from .operator import Operator
-from .send_manager import SendTaskManager
-from .seq_relay_manager import SequentialRelayTaskManager
-from .task_manager import TaskCheckStatus, TaskManager
-from nvflare.apis.fl_context import FLContext
+from .task_manager import TaskManager
 
 
-class Broadcast(Operator):
+class Broadcast (Operator):
 
     def __init__(self, fl_ctx: FLContext, task_check_period=0.5):
         """Manage life cycles of tasks and their destinations.
@@ -62,6 +47,8 @@ class Broadcast(Operator):
         targets = self.get_target_clients(parameters)
         min_responses = self.get_min_responses(parameters)
         wait_time_after_min_received = self.get_wait_time_after_min_clients_received(parameters)
+
+        print("task_name = ", task_name)
         op_task = Task(
             name=task_name,
             data=data,
@@ -69,14 +56,14 @@ class Broadcast(Operator):
             timeout=timeout,
             result_received_cb=result_received_cb,
         )
+
         self.broadcast(op_task, self.fl_ctx, targets, min_responses, wait_time_after_min_received)
 
     def broadcast(
             self,
             task: Task,
             fl_ctx: FLContext,
-            # targets: Union[List[Client], List[str], None] = None,
-            targets: Optional[List[str], None] = None,
+            targets: Optional[List[str]] = None,
             min_responses: int = 1,
             wait_time_after_min_received: int = 0,
     ):

@@ -1,7 +1,7 @@
 import socketserver
 import threading
 
-from .connect_action_handlers import broadcast_handler
+from .broadcast_handlers import broadcast_handler
 from .messaage import unpack_message, json_encode
 
 
@@ -13,9 +13,10 @@ class ConnectServerReqHandler(socketserver.BaseRequestHandler):
     override the handle() method to implement communication to the
     client.
     """
+
     def __init__(self, request, client_address, server, fed_server):
-        super().__init__(request, client_address, server)
         self.fed_server = fed_server
+        super().__init__(request, client_address, server)
 
     def setup(self):
         pass
@@ -40,7 +41,7 @@ class ConnectServerReqHandler(socketserver.BaseRequestHandler):
             parameters = content["parameters"]
             action_handler = self.get_action_handler().get(action, None)
             if action_handler:
-                threading.Thread(target=action_handler, args=[parameters, self.request, self.fed_server]).start()
+                action_handler(parameters, self.request, self.fed_server)
 
         # just send back the same data, but upper-cased
         # self.request.sendall(received)

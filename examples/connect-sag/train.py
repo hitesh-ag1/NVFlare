@@ -40,10 +40,10 @@ def train():
             AppConstants.CURRENT_ROUND: current_round,
             AppConstants.NUM_ROUNDS: total_rounds,
             AppConstants.CONTRIBUTION_ROUND: current_round,
-            "task_name": task_name,
-            "wait_time_after_min_received": wait_time_after_min_received,
-            "train_timeout": train_timeout,
-            "min_clients": min_clients
+            "nvflare.task.name": task_name,
+            "nvflare.task.wait_time_after_min_received": wait_time_after_min_received,
+            "nvflare.task.timeout": train_timeout,
+            "nvflare.task.client.min_responses": min_clients
         }
 
         client_results = broadcast(inputs)
@@ -52,7 +52,6 @@ def train():
 
 
 def setup():
-    # ask Server Service to create a coordinator specific for this job
     # serialize client code adn transfer client files to server and ask
     # Server Service to deploy Client Executors and executor ids
     pass

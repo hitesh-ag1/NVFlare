@@ -13,11 +13,11 @@ class ConnectServer(socketserver.TCPServer):
         print("*************************************************")
         print("**************** ConnectServer started **********")
         print("*************************************************")
-        print("*************************************************")
         self.serve_forever()
 
     def finish_request(self, request, client_address):
         """Finish one request by instantiating RequestHandlerClass."""
+        print("***************************** finish_request ****************")
         ConnectServerReqHandler(request, client_address, self, self.fed_server)
 
 
