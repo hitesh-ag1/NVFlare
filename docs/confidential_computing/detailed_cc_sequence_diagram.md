@@ -19,7 +19,7 @@ sequenceDiagram
     CC_SDK -->> Attestation_Service: register policy
     Attestation_Service -->> CC_SDK: policy registration result
     CC_SDK -->> FLClient_1: policy registration result for client 1
-    FLClient_1 -->> FLClient_1: determine to stop or continue 
+    
 
     FLClient_2 -->> FLClient_2: trigger events ( system start etc.)
     FLClient_2 -->> CC_SDK: register Policy (provide client 2 Id)
@@ -27,7 +27,7 @@ sequenceDiagram
     CC_SDK -->> Attestation_Service: register policy
     Attestation_Service -->> CC_SDK: policy registration result
     CC_SDK -->> FLClient_2: policy registration result for client 2
-    FLClient_2 -->> FLClient_1: determine to stop or continue 
+     
 ```
 
 ### Preparation Actions: FL Server register policy
