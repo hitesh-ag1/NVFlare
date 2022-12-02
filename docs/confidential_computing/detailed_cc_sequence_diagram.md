@@ -95,7 +95,7 @@ sequenceDiagram
     FLServer -->> FLClient_2 : nonce
     
     Note left of FLServer: create none for FLServer itself
-    FLServer -->> CC_SDK : createNonce() fpr FLServer 
+    FLServer -->> CC_SDK : createNonce() for FLServer 
     CC_SDK -->> FLServer : nonce
        
 ```
