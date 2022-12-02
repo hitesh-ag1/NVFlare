@@ -30,7 +30,7 @@ sequenceDiagram
     FLClient_2 -->> FLClient_1: determine to stop or continue 
 ```
 
-### Preparation Actions: Client register policy
+### Preparation Actions: FL Server register policy
 
 ```mermaid
 sequenceDiagram
