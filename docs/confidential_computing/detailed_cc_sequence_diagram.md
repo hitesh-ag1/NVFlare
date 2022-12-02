@@ -45,7 +45,6 @@ sequenceDiagram
     CC_SDK -->> Attestation_Service: register policy
     Attestation_Service -->> CC_SDK: policy registration result
     CC_SDK -->> FLServer: policy registration result for client 1
-    FLServer -->> FLServer: determine to stop or continue 
  
 ```
 
