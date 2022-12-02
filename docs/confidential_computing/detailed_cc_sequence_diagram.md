@@ -74,21 +74,82 @@ sequenceDiagram
 
 ## Local Attestation
 
-
-### Preparation Actions: FL Clients and FL Server -- orchestration
-
+### Local Attestation: register devices (FL Clients and FL Server)
 ```mermaid
 sequenceDiagram
    autonumber
     participant FLClient_1
     participant FLClient_2
     participant FLServer
+    participant CC_SDK
+    participant vTMP
+    participant Attestation_Service
  
-    FLClient_1 -->> FLServer: registration client 1 with server
-    Note left of FLServer: a nonce is an arbitrary number that can be used just once in a cryptographic communication. 
+    FLClient_1 -->> FLServer: registration client 1 with FL server
+    Note left of FLServer: a nonce is an arbitrary number that can be used just once in a cryptographic communication.
+    FLServer -->> CC_SDK : createNonce() 
+    CC_SDK -->> FLServer : nonce
     FLServer -->> FLClient_1 : nonce
-    FLClient_2 -->> FLServer: registration client 2 with server
+    
+    FLClient_2 -->> FLServer: registration client 2 with FL server
+    FLServer -->> CC_SDK : createNonce() 
+    CC_SDK -->> FLServer : nonce
     FLServer -->> FLClient_2 : nonce
+    
+    Note left of FLServer: create none for FLServer for itself
+    FLServer -->> CC_SDK : createNonce() fpr FLServer 
+    CC_SDK -->> FLServer : nonce
+       
+```
 
+### Local Attestation: verify evidence
+
+```mermaid
+sequenceDiagram
+   autonumber
+    participant FLClient_1
+    participant FLClient_2
+    participant CC_SDK
+    participant vTMP
+    participant Attestation_Service
+    participant FLServer
+    
+    Note over FLClient_2, CC_SDK : verify FLClient_1
+    
+    FLClient_1 --> CC_SDK : verify_evidence(client_1_nonce)
+    CC_SDK -->> vTMP : generate_evidence(client_1_nonce)
+    vTMP -->> CC_SDK : evidence + nonce 
+    CC_SDK -->> Attestation_Service: verify_evidence(evidence + Nonce)
+    Attestation_Service -->> Attestation_Service: verify against policy
+    Attestation_Service -->> CC_SDK: token
+    CC_SDK -->> FLClient_1 : token
+    FLClient_1 -->> FLServer : token
+
+    Note over FLClient_2, CC_SDK : verify FLClient_2
+
+    FLClient_2 --> CC_SDK : verify_evidence(client_2_nonce)
+    CC_SDK -->> vTMP : generate_evidence(client_2_nonce)
+    vTMP -->> CC_SDK : evidence + nonce 
+    CC_SDK -->> Attestation_Service: verify_evidence(evidence + Nonce)
+    Attestation_Service -->> Attestation_Service: verify against policy
+    Attestation_Service -->> CC_SDK: token
+    CC_SDK -->> FLClient_2 : token
+    FLClient_2 -->> FLServer : token
+    
+    Note over FLServer, CC_SDK : verify FL Server
+    
+    FLServer --> CC_SDK : verify_evidence(FLServer_Nonce)
+    CC_SDK -->> vTMP : generate_evidence(FLServer_Nonce)
+    vTMP -->> CC_SDK : evidence + nonce 
+    CC_SDK -->> Attestation_Service: verify_evidence(evidence + Nonce)
+    Attestation_Service -->> Attestation_Service: verify against policy
+    Attestation_Service -->> CC_SDK: token
+    CC_SDK -->> FLServer : token
+    
+    FLServer --> FLServer : Orchestrator: make decision 
    
 ```
+
+## Policy Enforcement
+
+### TODO
