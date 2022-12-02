@@ -82,8 +82,6 @@ sequenceDiagram
     participant FLClient_2
     participant FLServer
     participant CC_SDK
-    participant vTMP
-    participant Attestation_Service
  
     FLClient_1 -->> FLServer: registration client 1 with FL server
     Note left of FLServer: a nonce is an arbitrary number that can be used just once in a cryptographic communication.
