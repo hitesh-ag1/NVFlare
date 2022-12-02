@@ -2,8 +2,14 @@
 # FLARE, CC SDK, Attestation Service Interaction
 
 ## Preparation
-
+* Question
+    * do we need to register two type of policies:
+        1) what policy that this device will accept ? 
+        2) what policy ( claim(?) ) that this device has ?
+      
 ### Preparation Actions: Client register policy
+
+
 
 ```mermaid
 sequenceDiagram
