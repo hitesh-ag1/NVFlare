@@ -196,7 +196,7 @@ sequenceDiagram
         Attestation_Service -->> CC_SDK : verify_claim
         CC_SDK -->> Flare_Job_Client : verify_claim
         alt if claim verified
-            Flare_Job_Client -->> Flare_Server: request_job
+            Flare_Job_Client -->> Flare_Server: submit_job
         else
             Flare_Job_Client -->> Flare_Job_Client: stop
         end
@@ -204,8 +204,6 @@ sequenceDiagram
     else
         Flare_Job_Client -->> Flare_Job_Client: stop
     end
-    
-    Flare_Job_Client -->> Flare_Server: submit_job
      
    
 ```
