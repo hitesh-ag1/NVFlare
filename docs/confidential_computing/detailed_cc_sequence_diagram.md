@@ -14,27 +14,27 @@
 ```mermaid
 sequenceDiagram
    autonumber
-    participant FLClient_1
-    participant FLClient_2
+    participant Flare_Client_1
+    participant Flare_Client_2
     participant CC_SDK
     participant Attestation_Service
 
-    FLClient_1 -->> FLClient_1: trigger events ( system start etc.)
-    Note over FLClient_1, CC_SDK: register Client 1 policy 
-    FLClient_1 -->> CC_SDK: register Policy (provide client 1 Id) 
+    Flare_Client_1 -->> Flare_Client_1: trigger events ( system start, submit_job etc.)
+    Note over Flare_Client_1, CC_SDK: register Client 1 policy 
+    Flare_Client_1 -->> CC_SDK: register Policy (provide client 1 Id) 
     CC_SDK -->> CC_SDK: create or load policy for client 1  ( from somewhere (?))
     CC_SDK -->> Attestation_Service: register policy
     Attestation_Service -->> CC_SDK: policy registration result
-    CC_SDK -->> FLClient_1: policy registration result for client 1
+    CC_SDK -->> Flare_Client_1: policy registration result for client 1
     
 
-    FLClient_2 -->> FLClient_2: trigger events ( system start etc.)
-    Note over FLClient_1, CC_SDK: register Client 2 policy
-    FLClient_2 -->> CC_SDK: register Policy (provide client 2 Id)
+    Flare_Client_2 -->> Flare_Client_2: trigger events ( system start, Submit_job, etc.)
+    Note over Flare_Client_1, CC_SDK: register Client 2 policy
+    Flare_Client_2 -->> CC_SDK: register Policy (provide client 2 Id)
     CC_SDK -->> CC_SDK: create or load policy for client 2  ( from somewhere (?))
     CC_SDK -->> Attestation_Service: register policy
     Attestation_Service -->> CC_SDK: policy registration result
-    CC_SDK -->> FLClient_2: policy registration result for client 2
+    CC_SDK -->> Flare_Client_2: policy registration result for client 2
      
 ```
 
@@ -43,17 +43,17 @@ sequenceDiagram
 ```mermaid
 sequenceDiagram
    autonumber
-    participant FLServer
+    participant Flare_Server
     participant CC_SDK
     participant Attestation_Service
 
-    FLServer -->> FLServer: trigger events ( system start etc.)
-    Note over FLServer, CC_SDK: register FL Server policy
-    FLServer -->> CC_SDK: register Policy (provide FL Server Id) 
+    Flare_Server -->> Flare_Server: trigger events ( system start, Submit_job etc.)
+    Note over Flare_Server, CC_SDK: register FL Server policy
+    Flare_Server -->> CC_SDK: register Policy (provide FL Server Id) 
     CC_SDK -->> CC_SDK: create or load policy for FL Server ( from somewhere (?))
     CC_SDK -->> Attestation_Service: register policy
     Attestation_Service -->> CC_SDK: policy registration result
-    CC_SDK -->> FLServer: policy registration result for FL Server
+    CC_SDK -->> Flare_Server: policy registration result for FL Server
  
 ```
 
@@ -63,20 +63,20 @@ sequenceDiagram
 ```mermaid
 sequenceDiagram
    autonumber
-    participant FLClient_1
-    participant FLClient_2
-    participant FLServer
+    participant Flare_Client_1
+    participant Flare_Client_2
+    participant Flare_Server
     participant CC_SDK
     participant Attestation_Service
  
-    FLClient_1 -->> FLServer: register client 1 at FL Server
-    FLClient_2 -->> FLServer: register client 2 at FL Server
-    FLServer -->> CC_SDK : cross clients policy validation (not sure this is required) 
+    Flare_Client_1 -->> Flare_Server: register client 1 at FL Server
+    Flare_Client_2 -->> Flare_Server: register client 2 at FL Server
+    Flare_Server -->> CC_SDK : cross clients policy validation (not sure this is required) 
     CC_SDK -->> Attestation_Service : cross clients policy validation with client_policy_ids 
  
     Attestation_Service -->> CC_SDK : cross clients policy validation results 
-    CC_SDK -->> FLServer : cross clients policy validation results
-    FLServer -->> FLServer: determine to stop or continue
+    CC_SDK -->> Flare_Server : cross clients policy validation results
+    Flare_Server -->> Flare_Server: determine to stop or continue
    
 ```
 
@@ -86,103 +86,97 @@ sequenceDiagram
 ```mermaid
 sequenceDiagram
    autonumber
-    participant FLClient_1
-    participant FLClient_2
-    participant FLServer
+    participant Flare_Client_1
+    participant Flare_Client_2
+    participant Flare_Server
     participant CC_SDK
  
-    FLClient_1 -->> FLServer: registration client 1 with FL server
-    Note left of FLServer: a nonce is an arbitrary number that can be used just once in a cryptographic communication.
-    FLServer -->> CC_SDK : createNonce() 
-    CC_SDK -->> FLServer : nonce
-    FLServer -->> FLClient_1 : nonce
+    Flare_Client_1 -->> Flare_Server: registration client 1 with FL server
+    Note left of Flare_Server: a nonce is an arbitrary number that can be used just once in a cryptographic communication.
+    Flare_Server -->> CC_SDK : createNonce() 
+    CC_SDK -->> Flare_Server : nonce
+    Flare_Server -->> Flare_Client_1 : nonce
     
-    FLClient_2 -->> FLServer: registration client 2 with FL server
-    FLServer -->> CC_SDK : createNonce() 
-    CC_SDK -->> FLServer : nonce
-    FLServer -->> FLClient_2 : nonce
+    Flare_Client_2 -->> Flare_Server: registration client 2 with FL server
+    Flare_Server -->> CC_SDK : createNonce() 
+    CC_SDK -->> Flare_Server : nonce
+    Flare_Server -->> Flare_Client_2 : nonce
     
-    Note left of FLServer: create Nonce for FLServer itself
-    FLServer -->> CC_SDK : createNonce() for FLServer 
-    CC_SDK -->> FLServer : nonce
+    Note left of Flare_Server: create Nonce for Flare_Server itself
+    Flare_Server -->> CC_SDK : createNonce() for Flare_Server 
+    CC_SDK -->> Flare_Server : nonce
        
 ```
 
 ### Local Attestation: verify evidence
 
-*  **FL Clients provide tokens to FL Server to approve they are trusted** 
-
 ```mermaid
 sequenceDiagram
    autonumber
-    participant FLClient_1
-    participant FLClient_2
+    
+    participant Flare_Job_Client
+    participant Flare_Server
+    participant Flare_Client_1
+    participant Flare_Client_2
     participant CC_SDK
     participant vTMP
     participant Attestation_Service
-    participant FLServer
     
-    Note over FLClient_1, CC_SDK : verify FLClient_1
-    
-    FLClient_1 --> CC_SDK : verify_evidence(client_1_nonce)
-    CC_SDK -->> vTMP : generate_evidence(client_1_nonce)
+    Flare_Job_Client -->> Flare_Server: submit_job 
+    activate Flare_Server
+    Note over Flare_Server, CC_SDK: first verify the Flare_Server itself to Clients
+    Flare_Server --> CC_SDK : verify_evidence(Flare_Server_nonce)
+    CC_SDK -->> vTMP : generate_evidence(Flare_Server_nonce)
     vTMP -->> CC_SDK : evidence + nonce 
     CC_SDK -->> Attestation_Service: verify_evidence(evidence + Nonce)
     Attestation_Service -->> Attestation_Service: verify against policy
     Attestation_Service -->> CC_SDK: token
-    CC_SDK -->> FLClient_1 : token
-    FLClient_1 -->> FLServer : token
-
-    Note over FLClient_2, CC_SDK : verify FLClient_2
-
-    FLClient_2 --> CC_SDK : verify_evidence(client_2_nonce)
-    CC_SDK -->> vTMP : generate_evidence(client_2_nonce)
-    vTMP -->> CC_SDK : evidence + nonce 
-    CC_SDK -->> Attestation_Service: verify_evidence(evidence + Nonce)
-    Attestation_Service -->> Attestation_Service: verify against policy
-    Attestation_Service -->> CC_SDK: token
-    CC_SDK -->> FLClient_2 : token
-    FLClient_2 -->> FLServer : token
-    
-    Note over FLServer, CC_SDK : verify FL Server
-    
-    FLServer --> CC_SDK : verify_evidence(FLServer_Nonce)
-    CC_SDK -->> vTMP : generate_evidence(FLServer_Nonce)
-    vTMP -->> CC_SDK : evidence + nonce 
-    CC_SDK -->> Attestation_Service: verify_evidence(evidence + Nonce)
-    Attestation_Service -->> Attestation_Service: verify against policy
-    Attestation_Service -->> CC_SDK: token
-    CC_SDK -->> FLServer : token
-    
-    FLServer --> FLServer : Orchestrator: make decision 
-   
-```
-* **FL Server provide token to FL Client to approve FL server is trust worthy**
-
-```mermaid
-
-sequenceDiagram
-   autonumber
-    participant FLClient_1
-    participant FLServer
-    participant CC_SDK
-    participant vTMP
-    participant Attestation_Service
-
-    FLServer --> CC_SDK : verify_evidence(FLServer_nonce)
-    CC_SDK -->> vTMP : generate_evidence(FLServer_nonce)
-    vTMP -->> CC_SDK : evidence + nonce 
-    CC_SDK -->> Attestation_Service: verify_evidence(evidence + Nonce)
-    Attestation_Service -->> Attestation_Service: verify against policy
-    Attestation_Service -->> CC_SDK: token
-    CC_SDK -->> FLServer : token
-    FLServer -->> FLClient_1 : token ( FL Client pull from FLServer)
+    CC_SDK -->> Flare_Server : token
+    deactivate Flare_Server
   
-    FLClient_1 --> FLClient_1 : Orchestrator: make decision 
+    activate Flare_Client_1
+    Note over Flare_Server, Flare_Client_2: first verify the Flare_Server itself to Clients
+    Flare_Server -->> Flare_Client_1:  Client pull from Server : get task + token
+    alt if  Flare_Server token is verified
+        Note over Flare_Server, Flare_Client_1: verify Flare_Client_1 to Flare_Server
+        Flare_Client_1 -->> CC_SDK : verify_evidence(client_1_nonce)
+        CC_SDK -->> vTMP : generate_evidence(client_1_nonce)
+        vTMP -->> CC_SDK : evidence + nonce 
+        CC_SDK -->> Attestation_Service: verify_evidence(evidence + Nonce)
+        Attestation_Service -->> Attestation_Service: verify against policy
+        Attestation_Service -->> CC_SDK: token
+        CC_SDK -->> Flare_Client_1 : token
+        Flare_Client_1 -->> Flare_Server : token
+    else
+        Flare_Client_1 -->> Flare_Client_1 : stop self 
+    end
+    deactivate Flare_Client_1
+
+    
+    
+    activate Flare_Client_2
+    Note over Flare_Server, Flare_Client_2: verify Flare_Client_2 to Flare_Server
+    Flare_Server -->>  Flare_Client_2:  Client pull from Server : get task + token
+    alt if  Flare_Server token is verified
+        Flare_Client_2 -->> CC_SDK : verify_evidence(client_2_nonce)
+        CC_SDK -->> vTMP : generate_evidence(client_2_nonce)
+        vTMP -->> CC_SDK : evidence + nonce 
+        CC_SDK -->> Attestation_Service: verify_evidence(evidence + Nonce)
+        Attestation_Service -->> Attestation_Service: verify against policy
+        Attestation_Service -->> CC_SDK: token
+        CC_SDK -->> Flare_Client_2 : token
+        Flare_Client_2 -->> Flare_Server : token
+    else
+        Flare_Client_2 -->> Flare_Client_2 : stop self
+    end
+    deactivate Flare_Client_2
+    
+    Note over Flare_Server, Flare_Server : make decision
+    Flare_Server -->> Flare_Server : make decision on which Flare Client to accept
+     
    
 ```
-
-
+ 
 
 ## Policy Enforcement
 
