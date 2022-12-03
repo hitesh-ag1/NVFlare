@@ -124,7 +124,8 @@ sequenceDiagram
     
     Flare_Job_Client -->> Flare_Server: submit_job 
     activate Flare_Server
-    Note over Flare_Server, CC_SDK: first verify the Flare_Server itself to Clients
+
+    Note over Flare_Server, CC_SDK: get evidence token
     Flare_Server --> CC_SDK : verify_evidence(Flare_Server_nonce)
     CC_SDK -->> vTMP : generate_evidence(Flare_Server_nonce)
     vTMP -->> CC_SDK : evidence + nonce 
@@ -135,8 +136,10 @@ sequenceDiagram
     deactivate Flare_Server
   
     activate Flare_Client_1
-    Note over Flare_Server, Flare_Client_2: first verify the Flare_Server itself to Clients
-    Flare_Server -->> Flare_Client_1:  Client pull from Server : get task + token
+    Note over Flare_Server, Flare_Client_1: first verify the Flare_Server itself to Clients
+    Flare_Server -->> Flare_Client_1:  Client pull from Server : get task + Flare_Server token 
+    Flare_Client_1 -->> Flare_Client_1: verify Flare_Server token  is valid ( how ?) 
+ 
     alt if  Flare_Server token is verified
         Note over Flare_Server, Flare_Client_1: verify Flare_Client_1 to Flare_Server
         Flare_Client_1 -->> CC_SDK : verify_evidence(client_1_nonce)
@@ -156,7 +159,8 @@ sequenceDiagram
     
     activate Flare_Client_2
     Note over Flare_Server, Flare_Client_2: verify Flare_Client_2 to Flare_Server
-    Flare_Server -->>  Flare_Client_2:  Client pull from Server : get task + token
+    Flare_Server -->>  Flare_Client_2:  Client pull from Server : get task + Flare_Server token
+    Flare_Client_2 -->> Flare_Client_2: verify Flare_Server token  is valid ( how ?)
     alt if  Flare_Server token is verified
         Flare_Client_2 -->> CC_SDK : verify_evidence(client_2_nonce)
         CC_SDK -->> vTMP : generate_evidence(client_2_nonce)
