@@ -110,6 +110,8 @@ sequenceDiagram
 
 ### Local Attestation: verify evidence
 
+*  **FL Clients provide tokens to FL Server to approve they are trusted** 
+
 ```mermaid
 sequenceDiagram
    autonumber
@@ -120,7 +122,7 @@ sequenceDiagram
     participant Attestation_Service
     participant FLServer
     
-    Note over FLClient_2, CC_SDK : verify FLClient_1
+    Note over FLClient_1, CC_SDK : verify FLClient_1
     
     FLClient_1 --> CC_SDK : verify_evidence(client_1_nonce)
     CC_SDK -->> vTMP : generate_evidence(client_1_nonce)
@@ -155,6 +157,32 @@ sequenceDiagram
     FLServer --> FLServer : Orchestrator: make decision 
    
 ```
+* **FL Server provide token to FL Client to approve FL server is trust worthy**
+
+```mermaid
+
+sequenceDiagram
+   autonumber
+    participant FLClient_1
+    participant FLServer
+    participant CC_SDK
+    participant vTMP
+    participant Attestation_Service
+
+    FLServer --> CC_SDK : verify_evidence(FLServer_nonce)
+    CC_SDK -->> vTMP : generate_evidence(FLServer_nonce)
+    vTMP -->> CC_SDK : evidence + nonce 
+    CC_SDK -->> Attestation_Service: verify_evidence(evidence + Nonce)
+    Attestation_Service -->> Attestation_Service: verify against policy
+    Attestation_Service -->> CC_SDK: token
+    CC_SDK -->> FLServer : token
+    FLServer -->> FLClient_1 : token ( FL Client pull from FLServer)
+  
+    FLClient_1 --> FLClient_1 : Orchestrator: make decision 
+   
+```
+
+
 
 ## Policy Enforcement
 
