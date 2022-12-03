@@ -181,11 +181,16 @@ sequenceDiagram
     end
     deactivate Flare_Client_2
     
-    Note over Flare_Server, Flare_Server : make decision
-    Flare_Server -->> Flare_Server : make decision on which Flare Client to accept
+    activate Flare_Server
+    Note right of Flare_Server : make decision
+    Flare_Server -->> CC_SDK :authenticate tokens ( Flare_Client_1, Flare_Client_2 tokens)
+    Flare_Server -->> Attestation_Service :authenticate tokens ( Flare_Client_1, Flare_Client_2 tokens)
+    Attestation_Service -->> CC_SDK : authenticated
+    CC_SDK -->> Flare_Server : authenticated
+    Flare_Server -->> Flare_Server : make decisions on accepting which Flare clients
+    deactivate Flare_Server
     
     Flare_Server --> Flare_Job_Client : get tokens ( Flare_Client_1, Flare_Client_2, Flare_Server)
-    
     Flare_Job_Client -->> CC_SDK: authenticate token
     CC_SDK -->> Attestation_Service: authenticate token
     Attestation_Service -->> CC_SDK : authenticated
