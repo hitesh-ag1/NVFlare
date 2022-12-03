@@ -19,7 +19,7 @@ sequenceDiagram
     participant CC_SDK
     participant Attestation_Service
 
-    Flare_Client_1 -->> Flare_Client_1: trigger events ( system start, submit_job etc.)
+    Flare_Client_1 -->> Flare_Client_1: trigger events ( system start etc.)
     Note over Flare_Client_1, CC_SDK: register Client 1 policy 
     Flare_Client_1 -->> CC_SDK: register Policy (provide client 1 Id) 
     CC_SDK -->> CC_SDK: create or load policy for client 1  ( from somewhere (?))
@@ -28,7 +28,7 @@ sequenceDiagram
     CC_SDK -->> Flare_Client_1: policy registration result for client 1
     
 
-    Flare_Client_2 -->> Flare_Client_2: trigger events ( system start, Submit_job, etc.)
+    Flare_Client_2 -->> Flare_Client_2: trigger events ( system start, etc.)
     Note over Flare_Client_1, CC_SDK: register Client 2 policy
     Flare_Client_2 -->> CC_SDK: register Policy (provide client 2 Id)
     CC_SDK -->> CC_SDK: create or load policy for client 2  ( from somewhere (?))
@@ -47,7 +47,7 @@ sequenceDiagram
     participant CC_SDK
     participant Attestation_Service
 
-    Flare_Server -->> Flare_Server: trigger events ( system start, Submit_job etc.)
+    Flare_Server -->> Flare_Server: trigger events ( system start etc.)
     Note over Flare_Server, CC_SDK: register FL Server policy
     Flare_Server -->> CC_SDK: register Policy (provide FL Server Id) 
     CC_SDK -->> CC_SDK: create or load policy for FL Server ( from somewhere (?))
