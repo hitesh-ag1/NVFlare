@@ -20,6 +20,7 @@ sequenceDiagram
     participant Attestation_Service
 
     FLClient_1 -->> FLClient_1: trigger events ( system start etc.)
+    Note over FLClient_1, CC_SDK: register Client 1 policy 
     FLClient_1 -->> CC_SDK: register Policy (provide client 1 Id) 
     CC_SDK -->> CC_SDK: create or load policy for client 1  ( from somewhere (?))
     CC_SDK -->> Attestation_Service: register policy
@@ -28,6 +29,7 @@ sequenceDiagram
     
 
     FLClient_2 -->> FLClient_2: trigger events ( system start etc.)
+    Note over FLClient_1, CC_SDK: register Client 2 policy
     FLClient_2 -->> CC_SDK: register Policy (provide client 2 Id)
     CC_SDK -->> CC_SDK: create or load policy for client 2  ( from somewhere (?))
     CC_SDK -->> Attestation_Service: register policy
@@ -46,11 +48,12 @@ sequenceDiagram
     participant Attestation_Service
 
     FLServer -->> FLServer: trigger events ( system start etc.)
-    FLServer -->> CC_SDK: register Policy (provide client 1 Id) 
-    CC_SDK -->> CC_SDK: create or load policy for client 1  ( from somewhere (?))
+    Note over FLServer, CC_SDK: register FL Server policy
+    FLServer -->> CC_SDK: register Policy (provide FL Server Id) 
+    CC_SDK -->> CC_SDK: create or load policy for FL Server ( from somewhere (?))
     CC_SDK -->> Attestation_Service: register policy
     Attestation_Service -->> CC_SDK: policy registration result
-    CC_SDK -->> FLServer: policy registration result for client 1
+    CC_SDK -->> FLServer: policy registration result for FL Server
  
 ```
 
