@@ -190,6 +190,7 @@ sequenceDiagram
     Flare_Server -->> Flare_Server : make decisions on accepting which Flare clients
     deactivate Flare_Server
     
+    Note over Flare_Job_Client, Flare_Server: enforce policy
     Flare_Server --> Flare_Job_Client : get tokens ( Flare_Client_1, Flare_Client_2, Flare_Server)
     Flare_Job_Client -->> CC_SDK: authenticate token
     CC_SDK -->> Attestation_Service: authenticate token
