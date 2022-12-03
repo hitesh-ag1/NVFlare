@@ -57,29 +57,6 @@ sequenceDiagram
  
 ```
 
-
-### Preparation Actions: Cross Clients policy validation -- required (?)
-
-```mermaid
-sequenceDiagram
-   autonumber
-    participant Flare_Client_1
-    participant Flare_Client_2
-    participant Flare_Server
-    participant CC_SDK
-    participant Attestation_Service
- 
-    Flare_Client_1 -->> Flare_Server: register client 1 at FL Server
-    Flare_Client_2 -->> Flare_Server: register client 2 at FL Server
-    Flare_Server -->> CC_SDK : cross clients policy validation (not sure this is required) 
-    CC_SDK -->> Attestation_Service : cross clients policy validation with client_policy_ids 
- 
-    Attestation_Service -->> CC_SDK : cross clients policy validation results 
-    CC_SDK -->> Flare_Server : cross clients policy validation results
-    Flare_Server -->> Flare_Server: determine to stop or continue
-   
-```
-
 ## Local Attestation
 
 ### Local Attestation: register devices (FL Clients and FL Server)
