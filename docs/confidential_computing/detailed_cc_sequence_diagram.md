@@ -108,7 +108,7 @@ sequenceDiagram
        
 ```
 
-### Local Attestation: verify evidence
+### Local Attestation: verify evidence & policy enforcement
 
 ```mermaid
 sequenceDiagram
@@ -122,7 +122,8 @@ sequenceDiagram
     participant vTMP
     participant Attestation_Service
     
-    Flare_Job_Client -->> Flare_Server: submit_job 
+    Flare_Job_Client -->> Flare_Server: request_job 
+    
     activate Flare_Server
 
     Note over Flare_Server, CC_SDK: get evidence token
@@ -138,7 +139,10 @@ sequenceDiagram
     activate Flare_Client_1
     Note over Flare_Server, Flare_Client_1: first verify the Flare_Server itself to Clients
     Flare_Server -->> Flare_Client_1:  Client pull from Server : get task + Flare_Server token 
-    Flare_Client_1 -->> Flare_Client_1: verify Flare_Server token  is valid ( how ?) 
+    Flare_Client_1 -->> CC_SDK: authenticate token
+    CC_SDK -->> Attestation_Service: authenticate token
+    Attestation_Service -->> CC_SDK : authenticated
+    CC_SDK -->> Flare_Client_1 : authenticated
  
     alt if  Flare_Server token is verified
         Note over Flare_Server, Flare_Client_1: verify Flare_Client_1 to Flare_Server
@@ -154,13 +158,15 @@ sequenceDiagram
         Flare_Client_1 -->> Flare_Client_1 : stop self 
     end
     deactivate Flare_Client_1
-
     
     
     activate Flare_Client_2
     Note over Flare_Server, Flare_Client_2: verify Flare_Client_2 to Flare_Server
     Flare_Server -->>  Flare_Client_2:  Client pull from Server : get task + Flare_Server token
-    Flare_Client_2 -->> Flare_Client_2: verify Flare_Server token  is valid ( how ?)
+    Flare_Client_2 -->> CC_SDK: authenticate token
+    CC_SDK -->> Attestation_Service: authenticate token
+    Attestation_Service -->> CC_SDK : authenticated
+    CC_SDK -->> Flare_Client_2 : authenticated
     alt if  Flare_Server token is verified
         Flare_Client_2 -->> CC_SDK : verify_evidence(client_2_nonce)
         CC_SDK -->> vTMP : generate_evidence(client_2_nonce)
@@ -177,11 +183,30 @@ sequenceDiagram
     
     Note over Flare_Server, Flare_Server : make decision
     Flare_Server -->> Flare_Server : make decision on which Flare Client to accept
+    
+    Flare_Server --> Flare_Job_Client : get tokens ( Flare_Client_1, Flare_Client_2, Flare_Server)
+    
+    Flare_Job_Client -->> CC_SDK: authenticate token
+    CC_SDK -->> Attestation_Service: authenticate token
+    Attestation_Service -->> CC_SDK : authenticated
+    CC_SDK -->> Flare_Job_Client : authenticated
+    
+    alt if authenticated
+        Flare_Job_Client -->>  CC_SDK: verify_claim  ( what's the arguments (?) )
+        Attestation_Service -->> CC_SDK : verify_claim
+        CC_SDK -->> Flare_Job_Client : verify_claim
+        alt if claim verified
+            Flare_Job_Client -->> Flare_Server: request_job
+        else
+            Flare_Job_Client -->> Flare_Job_Client: stop
+        end
+         
+    else
+        Flare_Job_Client -->> Flare_Job_Client: stop
+    end
+    
+    Flare_Job_Client -->> Flare_Server: submit_job
      
    
 ```
- 
 
-## Policy Enforcement
-
-### TODO
