@@ -63,8 +63,8 @@ sequenceDiagram
 There are following use cases in consideration
 * Flare Client Node needs to make sure the Flare Server is trust worthy
 * Flare Server Node needs to make sure the Flare Client Nodes are trust worthy
-* Flare Console Node ( aka Job Client Node) needs to make sure all FL Server and Flare Clients are trust worthy
-* Flare Client Node needs to make sure the job to be deployed to the other Flare Client nodes (via Flare Server Node) are trust worthy
+* Flare Console Node ( aka Job Client Node) needs to make sure all Flare Server and Flare Clients are trust worthy
+* Flare Client Node needs to make sure other Flare Client nodes are trust worthy, For those Nodes, the Client's job will be deployed (via Flare Server Node) to them.
 
 ### Open questions
 * if the Flare Server is trusty to Flare Client 1, and Node 1, Node 2 are trust worthy to Flare Server,  can the Flare Client 1 considered Node 1 and Node 2 are also trust worthy ? 
