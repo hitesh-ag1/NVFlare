@@ -149,7 +149,7 @@ sequenceDiagram
         
     Note over request_node, CC_SDK: check_policy(node_nonce) on Node
     request_node --> CC_SDK : get_attestation_token(node_nonce)
-    CC_SDK -->> request_node : Flare_Node_2 token
+    CC_SDK -->> request_node : Node token
     Node -->> CC_SDK:  authenticate(node token)  
     CC_SDK -->> request_node : Node authenticated
      
