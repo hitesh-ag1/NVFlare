@@ -189,9 +189,9 @@ sequenceDiagram
 sequenceDiagram
    autonumber
      
-    participant Flare_Server
     participant Flare_Client_1
     participant Flare_Client_2
+    participant Flare_Server
     participant CC_SDK
      
     activate Flare_Server
@@ -210,7 +210,7 @@ sequenceDiagram
     
     activate Flare_Server
     Note right of Flare_Server : verify Flare clients if Flare clients are still live
-    Flare_Server --> CC_SDK : check_policies(Flare_Client_1, Flare_Client_2, Flare_Server)
+    Flare_Server -->> CC_SDK : check_policies(Flare_Client_1, Flare_Client_2, Flare_Server)
     CC_SDK -->> Flare_Server : Dict( node -> authenticated)
     par for all client nodes 
             alt if flare client is authenticated
