@@ -154,7 +154,8 @@ sequenceDiagram
     CC_SDK -->> request_node : Node authenticated
      
     request_node -->>  CC_SDK: verify_claim  ( what's the arguments (?) )
-    Attestation_Service -->> CC_SDK : verify_claim
+    CC_SDK -->> Attestation_Service : verify_claim
+    Attestation_Service -->> CC_SDK : verify_claim result
     CC_SDK -->> request_node : verify_claim result
 ```
 
