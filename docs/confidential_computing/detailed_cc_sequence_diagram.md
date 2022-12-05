@@ -68,8 +68,8 @@ There are following use cases in consideration
 
 ### Open questions
 * if the Flare Server is trusty to Flare Client 1, and Node 1, Node 2 are trust worthy to Flare Server,  can the Flare Client 1 considered Node 1 and Node 2 are also trust worthy ? 
-  in other words, is the trust transitive ? 
-* The Attestation Service returned token, is it safe to be shared ?  for example,  Flare Server received attestation token from Flare Client 1, is it ok to pass the Flare Client 1 token to Flare Client 2.  
+  in other words, is the trust transitive ?  
+* how to verify_claim  ( what's the arguments (?) )
 
 
 ### Local Attestation: register devices (FL Clients and FL Server)
@@ -136,28 +136,44 @@ sequenceDiagram
     CC_SDK -->> Node : authenticated
 ```
 
-* Check/enforce Policy on Node
+* Check/enforce Policy on Node: method_1 check_policy_1(node attestation token)
 
 ```mermaid
 sequenceDiagram
    autonumber
     
     participant request_node
-    participant Node
     participant CC_SDK
     participant Attestation_Service
         
-    Note over request_node, CC_SDK: check_policy(node_nonce) on Node
-    request_node --> CC_SDK : get_attestation_token(node_nonce)
-    CC_SDK -->> request_node : Node token
-    Node -->> CC_SDK:  authenticate(node token)  
-    CC_SDK -->> request_node : Node authenticated
-     
-    request_node -->>  CC_SDK: verify_claim  ( what's the arguments (?) )
+    Note over request_node, CC_SDK: check_policy(node attestation token) on a particular Node for given None
+    Note over request_node, CC_SDK: request_node will one making the request, Node will will be one to be checked 
+    request_node --> CC_SDK : check_policy(node attestation token)
+    CC_SDK -->> CC_SDK:  authenticate(node's attestation token)
+    CC_SDK -->>  CC_SDK: verify_claim  ( what's the arguments (?) )
     CC_SDK -->> Attestation_Service : verify_claim
     Attestation_Service -->> CC_SDK : verify_claim result
     CC_SDK -->> request_node : verify_claim result
 ```
+
+
+* Check/enforce Policy on Node: method_2 check_policy(node_nonce)
+
+```mermaid
+sequenceDiagram
+   autonumber
+    
+    participant request_node
+    participant CC_SDK
+        
+    Note over request_node, CC_SDK: check_policy(node_nonce) on a particular Node for given None
+    Note over request_node, CC_SDK: request_node will one making the request, Node will will be one to be checked 
+    request_node --> CC_SDK : check_policy(node_nonce)
+    CC_SDK -->> CC_SDK:  get authentication token(node_nonce) 
+    CC_SDK -->> CC_SDK:  check_policy_1( authentication token) 
+    CC_SDK -->> request_node : verify_claim result
+```
+
 
 * Flare Client checks if Flare Server is trust worthy
 
@@ -210,9 +226,9 @@ sequenceDiagram
     
     activate Flare_Server
     Note right of Flare_Server : verify Flare clients if Flare clients are still live
-    Flare_Server -->> CC_SDK : check_policies(Flare_Client_1, Flare_Client_2, Flare_Server)
+    Flare_Server -->> CC_SDK : check_policies(Flare_Client_1 token, Flare_Client_2 token)
     CC_SDK -->> Flare_Server : Dict( node -> authenticated)
-    par for all client nodes 
+    par loop for each client node 
             alt if flare client is authenticated
                 Flare_Server -->>  Flare_Server:  accept client  
             else
@@ -231,6 +247,7 @@ sequenceDiagram
     
     participant Flare_Job_Client
     participant Flare_Server
+    participant Flare_Client
     participant CC_SDK
     
     Flare_Job_Client -->> Flare_Server: try submit job
@@ -242,15 +259,26 @@ sequenceDiagram
     
     alt if all verified
         Flare_Job_Client -->> Flare_Server: submit_job
+        activate Flare_Server
+        loop over active FL Clients
+            Flare_Server -->> Flare_Client: try deploy_app for Client
+            Flare_Server -->> CC_SDK: check_policy(Flare_Client attestation token)
+            CC_SDK -->> Flare_Server: verified
+            alt if Flare_Client verified
+                Flare_Server -->> Flare_Client_1: deploy_app for Client
+            else
+                Flare_Server -->> Flare_Server: status: deploy_app failed
+            end
+        end
+        deactivate Flare_Server
     else
         Flare_Job_Client -->> Flare_Job_Client: stop
     end
    
 ```
 
+* Flare Client 1 check if other FL Clients are trust worthy, onto those nodes, the Client 1's job code will be deployed
 
-* Flare Client 1 check if the other FL Clients the job code will be deployed to are trust worthy
-
-  * approach one, Flare Client 1 as Flare Server to do it on behalf of Flare Client 1, is this allowed ? 
+  * approach one, Flare Client 1 ask Flare Server to do it on behalf of Flare Client 1, is this allowed ? 
   * approach two, Flare Server sends all clients' tokens to Flare Client 1. Flare Client 1 ask CC SDK to check for all the clients. Is token sharable ? 
 
