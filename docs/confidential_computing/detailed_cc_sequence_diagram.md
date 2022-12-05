@@ -212,13 +212,13 @@ sequenceDiagram
     activate Flare_Server
     Note right of Flare_Server : verify Flare clients if Flare clients are still live
     Flare_Server --> CC_SDK : check_policies(Flare_Client_1, Flare_Client_2, Flare_Server)
-    CC_SDK -->> Flare_Server : Dict( node -> authenticated) 
-    loop for each Flare Client nodes
-        alt if flare client is authenticated
-            Flare_Server -->>  Flare_Server:  accept client  
-        else
-            Flare_Server -->>  Flare_Server:  reject client  
-        end
+    CC_SDK -->> Flare_Server : Dict( node -> authenticated)
+    par for all client nodes 
+            alt if flare client is authenticated
+                Flare_Server -->>  Flare_Server:  accept client  
+            else
+                Flare_Server -->>  Flare_Server:  reject client  
+            end
     end
 ```
 
