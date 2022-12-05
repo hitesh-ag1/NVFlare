@@ -159,7 +159,7 @@ sequenceDiagram
     CC_SDK -->> request_node : verify_claim result
 ```
 
-* Flare Client check if Flare Server is trust worthy
+* Flare Client checks if Flare Server is trust worthy
 
 ```mermaid
 sequenceDiagram
@@ -201,12 +201,10 @@ sequenceDiagram
     deactivate Flare_Server
   
     activate Flare_Client_1
-    Note over Flare_Server, Flare_Client_1: first verify the Flare_Server itself to Clients
     Flare_Client_1 -->> Flare_Server:  check_and_register_client() 
     deactivate Flare_Client_1
     
     activate Flare_Client_2
-    Note over Flare_Server, Flare_Client_2: verify Flare_Client_2 to Flare_Server
     Flare_Client_2 -->> Flare_Server:  check_and_register_client() 
     deactivate Flare_Client_2
     
