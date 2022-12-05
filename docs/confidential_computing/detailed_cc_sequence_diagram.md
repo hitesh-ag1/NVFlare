@@ -59,6 +59,19 @@ sequenceDiagram
 
 ## Local Attestation
 
+### Use Cases
+There are following use cases in consideration
+* Flare Client Node needs to make sure the Flare Server is trust worthy
+* Flare Server Node needs to make sure the Flare Client Nodes are trust worthy
+* Flare Console Node ( aka Job Client Node) needs to make sure all FL Server and Flare Clients are trust worthy
+* Flare Client Node needs to make sure the job to be deployed to the other Flare Client nodes (via Flare Server Node) are trust worthy
+
+### Open questions
+* if the Flare Server is trusty to Flare Client 1, and Node 1, Node 2 are trust worthy to Flare Server,  can the Flare Client 1 considered Node 1 and Node 2 are also trust worthy ? 
+  in other words, is the trust transitive ? 
+* The Attestation Service returned token, is it safe to be shared ?  for example,  Flare Server received attestation token from Flare Client 1, is it ok to pass the Flare Client 1 token to Flare Client 2.  
+
+
 ### Local Attestation: register devices (FL Clients and FL Server)
 ```mermaid
 sequenceDiagram
@@ -87,107 +100,158 @@ sequenceDiagram
 
 ### Local Attestation: verify evidence & policy enforcement
 
+* Node get attestation token
+
+```mermaid
+sequenceDiagram
+   autonumber
+    
+    participant Flare_Node
+    participant CC_SDK
+    participant vTMP
+    participant Attestation_Service
+
+    Flare_Node --> CC_SDK : verify_evidence(Flare_Node_nonce)
+    CC_SDK -->> vTMP : generate_evidence(Flare_Node_nonce)
+    vTMP -->> CC_SDK : evidence + nonce 
+    CC_SDK -->> Attestation_Service: verify_evidence(evidence + Nonce)
+    Attestation_Service -->> Attestation_Service: verify against policy
+    Attestation_Service -->> CC_SDK: token
+    CC_SDK -->> Flare_Node : token  
+```
+
+* Node : authenticate(token)
+
+```mermaid
+sequenceDiagram
+   autonumber
+    
+    participant Node
+    participant CC_SDK
+    participant vTMP
+    participant Attestation_Service
+    Node -->> CC_SDK: authenticate(token)
+    CC_SDK -->> Attestation_Service: authenticate(token)
+    Attestation_Service -->> CC_SDK : authenticated
+    CC_SDK -->> Node : authenticated
+```
+
+* Check/enforce Policy on Node
+
+```mermaid
+sequenceDiagram
+   autonumber
+    
+    participant request_node
+    participant Node
+    participant CC_SDK
+    participant Attestation_Service
+        
+    Note over request_node, CC_SDK: check_policy(node_nonce) on Node
+    request_node --> CC_SDK : get_attestation_token(node_nonce)
+    CC_SDK -->> request_node : Flare_Node_2 token
+    Node -->> CC_SDK:  authenticate(node token)  
+    CC_SDK -->> request_node : Node authenticated
+     
+    request_node -->>  CC_SDK: verify_claim  ( what's the arguments (?) )
+    Attestation_Service -->> CC_SDK : verify_claim
+    CC_SDK -->> request_node : verify_claim result
+```
+
+* Flare Client check if Flare Server is trust worthy
+
+```mermaid
+sequenceDiagram
+   autonumber
+    
+    participant Flare_Client
+    participant Flare_Server
+    participant CC_SDK
+    
+    Note over Flare_Client, Flare_Server: check_and_register_client()
+    Flare_Client -->> Flare_Server: try to register client
+    Flare_Client -->> Flare_Server:  get Flare_Server attestation token 
+    Flare_Client -->> CC_SDK: check_policy( Flare_Server token)
+    CC_SDK -->> Flare_Client: check result
+    alt if  Flare_Server policy is verified
+         Flare_Client -->> Flare_Server: register client
+    else
+        Flare_Client -->> Flare_Client: Flare Server is not trusted, stop
+    end
+   
+```
+
+
+* Flare Server checks if Flare Clients are trust worthy
+
+```mermaid
+sequenceDiagram
+   autonumber
+     
+    participant Flare_Server
+    participant Flare_Client_1
+    participant Flare_Client_2
+    participant CC_SDK
+     
+    activate Flare_Server
+    Note over Flare_Server, CC_SDK: get evidence token
+    Flare_Server --> CC_SDK : get_attestation_token(Flare_Server_nonce)
+    CC_SDK -->> Flare_Server : token
+    deactivate Flare_Server
+  
+    activate Flare_Client_1
+    Note over Flare_Server, Flare_Client_1: first verify the Flare_Server itself to Clients
+    Flare_Client_1 -->> Flare_Server:  check_and_register_client() 
+    deactivate Flare_Client_1
+    
+    activate Flare_Client_2
+    Note over Flare_Server, Flare_Client_2: verify Flare_Client_2 to Flare_Server
+    Flare_Client_2 -->> Flare_Server:  check_and_register_client() 
+    deactivate Flare_Client_2
+    
+    activate Flare_Server
+    Note right of Flare_Server : verify Flare clients if Flare clients are still live
+    Flare_Server --> CC_SDK : check_policies(Flare_Client_1, Flare_Client_2, Flare_Server)
+    CC_SDK -->> Flare_Server : Dict( node -> authenticated) 
+    loop for each Flare Client nodes
+        alt if flare client is authenticated
+            Flare_Server -->>  Flare_Server:  accept client  
+        else
+            Flare_Server -->>  Flare_Server:  reject client  
+        end
+    end
+```
+
+
+
+* Flare Console ( Job Client ) check if Fare Server, Clients are trust worthy
+
 ```mermaid
 sequenceDiagram
    autonumber
     
     participant Flare_Job_Client
     participant Flare_Server
-    participant Flare_Client_1
-    participant Flare_Client_2
     participant CC_SDK
-    participant vTMP
-    participant Attestation_Service
     
-    Flare_Job_Client -->> Flare_Server: request_job 
-    
-    activate Flare_Server
-
-    Note over Flare_Server, CC_SDK: get evidence token
-    Flare_Server --> CC_SDK : verify_evidence(Flare_Server_nonce)
-    CC_SDK -->> vTMP : generate_evidence(Flare_Server_nonce)
-    vTMP -->> CC_SDK : evidence + nonce 
-    CC_SDK -->> Attestation_Service: verify_evidence(evidence + Nonce)
-    Attestation_Service -->> Attestation_Service: verify against policy
-    Attestation_Service -->> CC_SDK: token
-    CC_SDK -->> Flare_Server : token
-    deactivate Flare_Server
-  
-    activate Flare_Client_1
-    Note over Flare_Server, Flare_Client_1: first verify the Flare_Server itself to Clients
-    Flare_Server -->> Flare_Client_1:  Client pull from Server : get task + Flare_Server token 
-    Flare_Client_1 -->> CC_SDK: authenticate token
-    CC_SDK -->> Attestation_Service: authenticate token
-    Attestation_Service -->> CC_SDK : authenticated
-    CC_SDK -->> Flare_Client_1 : authenticated
- 
-    alt if  Flare_Server token is verified
-        Note over Flare_Server, Flare_Client_1: verify Flare_Client_1 to Flare_Server
-        Flare_Client_1 -->> CC_SDK : verify_evidence(client_1_nonce)
-        CC_SDK -->> vTMP : generate_evidence(client_1_nonce)
-        vTMP -->> CC_SDK : evidence + nonce 
-        CC_SDK -->> Attestation_Service: verify_evidence(evidence + Nonce)
-        Attestation_Service -->> Attestation_Service: verify against policy
-        Attestation_Service -->> CC_SDK: token
-        CC_SDK -->> Flare_Client_1 : token
-        Flare_Client_1 -->> Flare_Server : token
-    else
-        Flare_Client_1 -->> Flare_Client_1 : stop self 
+    Flare_Job_Client -->> Flare_Server: try submit job
+    Note right of Flare_Server: Flare_Server has already gathered all live flare client's tokens
+    Flare_Job_Client --> Flare_Server : get_all_attestation_tokens()
+    par all tokens
+        Flare_Job_Client -->> CC_SDK: authenticate (token) & verify_claims()
     end
-    deactivate Flare_Client_1
     
-    
-    activate Flare_Client_2
-    Note over Flare_Server, Flare_Client_2: verify Flare_Client_2 to Flare_Server
-    Flare_Server -->>  Flare_Client_2:  Client pull from Server : get task + Flare_Server token
-    Flare_Client_2 -->> CC_SDK: authenticate token
-    CC_SDK -->> Attestation_Service: authenticate token
-    Attestation_Service -->> CC_SDK : authenticated
-    CC_SDK -->> Flare_Client_2 : authenticated
-    alt if  Flare_Server token is verified
-        Flare_Client_2 -->> CC_SDK : verify_evidence(client_2_nonce)
-        CC_SDK -->> vTMP : generate_evidence(client_2_nonce)
-        vTMP -->> CC_SDK : evidence + nonce 
-        CC_SDK -->> Attestation_Service: verify_evidence(evidence + Nonce)
-        Attestation_Service -->> Attestation_Service: verify against policy
-        Attestation_Service -->> CC_SDK: token
-        CC_SDK -->> Flare_Client_2 : token
-        Flare_Client_2 -->> Flare_Server : token
-    else
-        Flare_Client_2 -->> Flare_Client_2 : stop self
-    end
-    deactivate Flare_Client_2
-    
-    activate Flare_Server
-    Note right of Flare_Server : make decision
-    Flare_Server -->> CC_SDK :authenticate tokens ( Flare_Client_1, Flare_Client_2 tokens)
-    Flare_Server -->> Attestation_Service :authenticate tokens ( Flare_Client_1, Flare_Client_2 tokens)
-    Attestation_Service -->> CC_SDK : authenticated
-    CC_SDK -->> Flare_Server : authenticated
-    Flare_Server -->> Flare_Server : make decisions on accepting which Flare clients
-    deactivate Flare_Server
-    
-    Note over Flare_Job_Client, Flare_Server: enforce policy
-    Flare_Server --> Flare_Job_Client : get tokens ( Flare_Client_1, Flare_Client_2, Flare_Server)
-    Flare_Job_Client -->> CC_SDK: authenticate token
-    CC_SDK -->> Attestation_Service: authenticate token
-    Attestation_Service -->> CC_SDK : authenticated
-    CC_SDK -->> Flare_Job_Client : authenticated
-    
-    alt if authenticated
-        Flare_Job_Client -->>  CC_SDK: verify_claim  ( what's the arguments (?) )
-        Attestation_Service -->> CC_SDK : verify_claim
-        CC_SDK -->> Flare_Job_Client : verify_claim
-        alt if claim verified
-            Flare_Job_Client -->> Flare_Server: submit_job
-        else
-            Flare_Job_Client -->> Flare_Job_Client: stop
-        end
-         
+    alt if all verified
+        Flare_Job_Client -->> Flare_Server: submit_job
     else
         Flare_Job_Client -->> Flare_Job_Client: stop
     end
-     
    
 ```
+
+
+* Flare Client 1 check if the other FL Clients the job code will be deployed to are trust worthy
+
+  * approach one, Flare Client 1 as Flare Server to do it on behalf of Flare Client 1, is this allowed ? 
+  * approach two, Flare Server sends all clients' tokens to Flare Client 1. Flare Client 1 ask CC SDK to check for all the clients. Is token sharable ? 
 
