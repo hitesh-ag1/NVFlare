@@ -1,18 +1,26 @@
 
 # Basic CC Sequence Diagrams
+#### open questions
+
+* prepare: 
+  * do we need to register two types of policies:
+          1) what policy that this device will accept ?
+          2) what policy ( claim(?) ) that this device has ?
+* local attestation and policy enforcement: 
+  * what's the purpose of the CC orchestration service (CC Orchestrator) ?
+  
+* If both CC SDK and CC Orchestrator are needed, 
+  * who is working on CC orchestrator APIs ? 
+
 
 ## Preparation
-* Question
-    * do we need to register two types of policies:
-        1) what policy that this device will accept ? 
-        2) what policy ( claim(?) ) that this device has ?
-      
+
 ### Preparation Actions: register_policy()
 
 * We use FL Server, FL Client to indicate the Client nodes and Server in Federated Computing setting
 * For non-High Availability Case, FLARE will have one (1) FL server + Many (N) FL Clients
-* For High Availability Case, FLARE will have two (2) FL server + One (1) overseer + Many (N) FL Clients
-* Node here represent individual node (FL Server, FL Client, FL Overseer, FL job Client)
+* For High Availability Case, FLARE will have two (2) FL server + Many (N) FL Clients
+* Node here represent individual node (FL Server, FL Client, FL job Client)
 
 ```mermaid
 sequenceDiagram
@@ -170,7 +178,7 @@ sequenceDiagram
     participant CC_SDK
     participant CC_Orchestrator
     note right of FL_Node : all FL_Node preparements are done independently, not necessarily at the same time
-    par for node in [ FL_Server(s), Overseer, FL_Clients]
+    par for node in [ FL_Server(s), FL_Clients]
         FL_Node -->> FL_Node: trigger event (system start) 
         FL_Node -->> CC_SDK: register_policy(node)
         CC_SDK -->> CC_Orchestrator: register_policy(node)
@@ -189,7 +197,7 @@ sequenceDiagram
     participant CC_SDK
 
     note right of FL_Node : all FL_Node attestation are done independently, not necessarily at the same time
-    par for node in [ FL_Server(s), Overseer, FL_Clients]
+    par for node in [ FL_Server(s), FL_Clients]
         FL_Node -->> FL_Node: trigger event (system start)
         note over FL_Node, CC_SDK: sdk.attest(node) 
         FL_Node -->> CC_SDK: attest(node)
@@ -213,22 +221,6 @@ sequenceDiagram
     CC_SDK -->> FL_Server: Nonce
 ```
 
-### connect to Oversee event
-
-#### Flare Job Client = Flare Console Node, or node running Flare Notebook
-
-```mermaid
-sequenceDiagram
-   autonumber
-    participant FL_Job_Client
-    participant FL_Overseer
-    participant CC_SDK
-    
-    FL_Job_Client -->> FL_Overseer: connection
-    FL_Overseer -->> FL_Overseer: call CC attestation 
-    FL_Overseer -->> CC_SDK: attest(FL_Overseer node)
-    CC_SDK -->> FL_Overseer: Nonce
-```
 
 ### FL Server deploy app to clients event
  
@@ -250,11 +242,11 @@ sequenceDiagram
 
 #### Use Cases
 There are following use cases in consideration
-* Flare Server Node needs to make sure all participants are trust worthy, i.e Overseer, All FL Clients
-* Flare Client Node needs to make sure all participants are trust worthy, i.e FL Server1,2, Overseer, other FL Clients
-* Flare Job Client needs to make sure all FL Servers, overseer and all FL Clients are trust worthy
+* Flare Server Node needs to make sure all participants are trust worthy, i.e All FL Clients
+* Flare Client Node needs to make sure all participants are trust worthy, i.e FL Server1,2, other FL Clients
+* Flare Job Client needs to make sure all FL Servers and FL Clients are trust worthy
  
-### Use Case 1: **Flare Server** Node needs to make sure all participants are trust worthy, i.e Overseer, All FL Clients
+### Use Case 1: **Flare Server** Node needs to make sure all participants are trust worthy, i.e All FL Clients
 
 ```mermaid
 sequenceDiagram
@@ -262,16 +254,11 @@ sequenceDiagram
     
     participant FL_Job_Client
     participant FL_Server
-    participant FL_Overseer
     participant CC_SDK
     FL_Job_Client -->>  FL_Server: try to submit Job 
     FL_Server -->>  FL_Server: trigger event for CC policy enforcements
-    FL_Server --> CC_SDK : enforce_policy(): for FL Overseer, FL Clients 
-    CC_SDK -->> FL_Server : policy result
-    alt if policy not verified for overseer
-        FL_Server --> FL_Server : deny Overseer for future communication
-    end
-     
+    FL_Server --> CC_SDK : enforce_policy(): for FL Clients 
+    CC_SDK -->> FL_Server : policy result     
     loop over FL Clients
         note right of FL_Server: loop over FL Clients or runing in parellel
         alt if policy is not verified for client
@@ -287,7 +274,7 @@ sequenceDiagram
 ```
 
  
-### Use Case 2: **Flare Client** node needs to make sure all participants are trust worthy, i.e FL Server(s), Overseer, other FL Clients
+### Use Case 2: **Flare Client** node needs to make sure all participants are trust worthy, i.e FL Server(s), other FL Clients
 
 * get task() event
 
@@ -301,12 +288,8 @@ sequenceDiagram
     
     Flare_Client -->> Flare_Server: try to pull task from FL Server, trigger event to check CC policy
     Flare_Client -->> Flare_Client:  enforce_policy()
-    Flare_Client --> CC_SDK : enforce_policy(): get participant tokens from CC_orchestrator for FL Overseer, FL Server and other FL Clients 
+    Flare_Client --> CC_SDK : enforce_policy(): get participant tokens from CC_orchestrator for FL Server and other FL Clients 
     CC_SDK -->> Flare_Client : policy result
-    alt if policy not verified for overseer
-        Flare_Client --> FL_Server : deny Overseer for future communication
-    end
-
     alt if policy not verified for FL Server
         Flare_Client --> stop : can't continue
     else
@@ -321,7 +304,7 @@ sequenceDiagram
    
 ```
 
-### Use Case 3: Flare Job Client needs to make sure all FL Servers, overseer and all FL Clients are trust worthy
+### Use Case 3: Flare Job Client needs to make sure all FL Servers and FL Clients are trust worthy
 
 ```mermaid
 sequenceDiagram
