@@ -333,11 +333,15 @@ sequenceDiagram
     participant CC_SDK
     
     Flare_Job_Client -->> Flare_Server: submit job
-    Flare_Job_Client -->> Flare_Job_Client: trigger local attestation 
-    Flare_Job_Client -->> CC_SDK: attest(Flare_Job_Client)
-    Flare_Job_Client -->> CC_SDK: enforce_policy(): 
-    CC_SDK --> Flare_Job_Client: policy enforncement results
     
+    note right of Flare_Job_Client: attest Flare Console Note itself first
+    Flare_Job_Client -->> Flare_Job_Client: trigger local attestation
+    Flare_Job_Client -->> CC_SDK: attest(Flare_Job_Client)
+    
+    note over Flare_Job_Client, CC_SDK: enforce policy for all nodes
+    
+    Flare_Job_Client -->> CC_SDK: enforce_policy()  
+    CC_SDK --> Flare_Job_Client: policy enforncement results
     alt if all verified
         Flare_Job_Client -->> Flare_Server: submit_job
     else
