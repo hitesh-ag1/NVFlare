@@ -9,10 +9,10 @@
       
 ### Preparation Actions: register_policy()
 
-Note: We use FL Server, FL Client to indicate the Client nodes and Server in Federated Computing setting
-For non-High Availability Case, FLARE will have one (1) FL server + Many (N) FL Clients
-For High Availability Case, FLARE will have two (2) FL server + One (1) overseer + Many (N) FL Clients
-Node here represent each node (FL Server, FL Client, FL Overseer). 
+* We use FL Server, FL Client to indicate the Client nodes and Server in Federated Computing setting
+* For non-High Availability Case, FLARE will have one (1) FL server + Many (N) FL Clients
+* For High Availability Case, FLARE will have two (2) FL server + One (1) overseer + Many (N) FL Clients
+* Node here represent individual node (FL Server, FL Client, FL Overseer, FL job Client)
 
 ```mermaid
 sequenceDiagram
