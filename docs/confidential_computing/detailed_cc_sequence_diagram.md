@@ -166,7 +166,7 @@ with above basic diagrams, now we apply above to Flare System.
 #### Assumptions
 * CC Orchestrator will be hosted by FL Server's Node
 * communication between CC SDK and CC Orchestrator is considered trust worthy
-* Flare Job Client = Flare Console Node, or node running Flare Notebook
+* Flare Job Client = Flare Console Node (aka Admin Console), or node running Flare Notebook
 
 ## Flare nodes prepare
 * based on system start event or initial handshake ( in case of notebook admin API runner)
