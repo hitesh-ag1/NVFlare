@@ -334,7 +334,7 @@ sequenceDiagram
     
     Flare_Job_Client -->> Flare_Server: submit job
     
-    note right of Flare_Job_Client: attest Flare Console Note itself first
+    note right of Flare_Job_Client: attest Flare Console or Notebook node itself first
     Flare_Job_Client -->> Flare_Job_Client: trigger local attestation
     Flare_Job_Client -->> CC_SDK: attest(Flare_Job_Client)
     
