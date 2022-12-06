@@ -37,11 +37,11 @@ sequenceDiagram
  
 ## Local Attestation
 
+### register_node() and  verify_evidence()
+
 Every Node needs to attest for itself.
 
-### Local Attestation
-
-* Node registration_node()
+* Node register_node() 
 
 ```mermaid
 sequenceDiagram
@@ -50,9 +50,9 @@ sequenceDiagram
     participant CC_SDK
     participant CC_Orchestrator    
  
-    Node -->> CC_SDK: registration_node() with CC Orchestor
+    Node -->> CC_SDK: register_node() with CC Orchestor
     Note left of CC_SDK: a nonce is an arbitrary number that can be used just once in a cryptographic communication.
-    CC_SDK -->> CC_Orchestrator : registration_node() 
+    CC_SDK -->> CC_Orchestrator : register_node() 
     CC_Orchestrator -->> CC_SDK : createNonce() 
     CC_SDK -->> Node : nonce
       
@@ -89,6 +89,21 @@ sequenceDiagram
     CC_Orchestrator -->> CC_Orchestrator: save dict(tokem, evendidence)
 ```
 
+### attest()
+
+```mermaid
+sequenceDiagram
+   autonumber
+    participant Node
+    participant CC_SDK
+
+    note over Node, CC_SDK: attest(node) combined two functions:  register_node() and verify_evidence() into single function
+    Node -->> CC_SDK: attest(node)
+    CC_SDK -->> CC_SDK: register_node(node)
+    CC_SDK -->> CC_SDK : verify_evidence(nonce) 
+    CC_SDK -->> Node: Nonce
+      
+```
 
 ## Enforce Policy
 
@@ -172,21 +187,18 @@ sequenceDiagram
    autonumber
     participant FL_Node
     participant CC_SDK
-    participant CC_Orchestrator
+
     note right of FL_Node : all FL_Node attestation are done independently, not necessarily at the same time
     par for node in [ FL_Server(s), Overseer, FL_Clients]
         FL_Node -->> FL_Node: trigger event (system start)
         note over FL_Node, CC_SDK: sdk.attest(node) 
-        FL_Node -->> CC_SDK: registration_node(node)
-        CC_SDK -->> CC_Orchestrator: registration_node(node)
-        FL_Node -->> CC_SDK: verify_evidence(node)
-        CC_SDK -->> CC_Orchestrator: verify_evidence(node)
+        FL_Node -->> CC_SDK: attest(node)
+        CC_SDK -->> FL_Node: Nonce
     end     
     
 ```
 
 ### submit job event
-
 
 ```mermaid
 sequenceDiagram
@@ -198,6 +210,7 @@ sequenceDiagram
     FL_Job_Client -->> FL_Server: submit Job
     FL_Server -->> FL_Server: call CC attestation 
     FL_Server -->> CC_SDK: attest(FL_server node)    
+    CC_SDK -->> FL_Server: Nonce
 ```
 
 ### connect to Oversee event
@@ -214,7 +227,7 @@ sequenceDiagram
     FL_Job_Client -->> FL_Overseer: connection
     FL_Overseer -->> FL_Overseer: call CC attestation 
     FL_Overseer -->> CC_SDK: attest(FL_Overseer node)
-    
+    CC_SDK -->> FL_Overseer: Nonce
 ```
 
 ### FL Server deploy app to clients event
@@ -227,9 +240,9 @@ sequenceDiagram
     participant CC_SDK
    
     FL_Server -->> FL_Client: deploy app event
-    FL_Client -->> FL_Client: call CC attestation 
+    FL_Client -->> FL_Client: trigger CC attestation 
     FL_Client -->> CC_SDK: attest(FL_Client node)
-   
+    CC_SDK -->> FL_Client: Nonce
 ```
 
 
