@@ -225,8 +225,7 @@ sequenceDiagram
     participant FL_Server
     participant FL_Client
     participant CC_SDK
-    participant CC_Orchestrator
-    
+   
     FL_Server -->> FL_Client: deploy app event
     FL_Client -->> FL_Client: call CC attestation 
     FL_Client -->> CC_SDK: attest(FL_Client node)
@@ -251,27 +250,25 @@ sequenceDiagram
     participant FL_Job_Client
     participant FL_Server
     participant FL_Overseer
-    participant FL_Client
     participant CC_SDK
     FL_Job_Client -->>  FL_Server: try to submit Job 
-    FL_Server -->>  FL_Server: deploy job to FL Clients
     FL_Server -->>  FL_Server: trigger event for CC policy enforcements
-    
-    FL_Server --> CC_SDK : enforce_policy(): get participant tokens from CC_orchestrator for FL Overseer, FL Clients 
+    FL_Server --> CC_SDK : enforce_policy(): for FL Overseer, FL Clients 
     CC_SDK -->> FL_Server : policy result
     alt if policy not verified for overseer
         FL_Server --> FL_Server : deny Overseer for future communication
     end
+     
     loop over FL Clients
-        alt if policy is not veriied for client
+        note right of FL_Server: loop over FL Clients or runing in parellel
+        alt if policy is not verified for client
             FL_Server --> FL_Server : deny FL client participation
         else
             FL_Server --> FL_Server : FL Client accepted
         end
     end
     
-     FL_Server --> FL_Server : check min Fl_client before proceed
-     FL_Server --> FL_Server : deploy_app() continues
+     FL_Server --> FL_Server : check min number of Fl_clients before proceed
      FL_Server --> FL_Server : submit_job() continues
     
 ```
