@@ -196,7 +196,7 @@ sequenceDiagram
     participant CC_SDK
     participant CC_Orchestrator
     
-    FL_Job_Client -->> FL_Server: triggered by submit Job
+    FL_Job_Client -->> FL_Server: submit Job
     FL_Server -->> FL_Server: call CC prepare() 
     FL_Server -->> CC_SDK: registration_node(FL_server node)
     CC_SDK -->> CC_Orchestrator: registration_node(FL_server node)
