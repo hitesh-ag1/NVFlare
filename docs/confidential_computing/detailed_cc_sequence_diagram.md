@@ -197,12 +197,8 @@ sequenceDiagram
     participant CC_Orchestrator
     
     FL_Job_Client -->> FL_Server: submit Job
-    FL_Server -->> FL_Server: call CC prepare() 
-    FL_Server -->> CC_SDK: registration_node(FL_server node)
-    CC_SDK -->> CC_Orchestrator: registration_node(FL_server node)
-    FL_Server -->> CC_SDK: verify_evidence(FL_server node)
-    CC_SDK -->> CC_Orchestrator: verify_evidence(FL_server node)
-    
+    FL_Server -->> FL_Server: call CC attestation 
+    FL_Server -->> CC_SDK: attest(FL_server node)    
 ```
 
 ### connect to Oversee event
