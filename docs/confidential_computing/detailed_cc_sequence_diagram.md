@@ -158,7 +158,7 @@ sequenceDiagram
     par for node in [ FL_Server(s), Overseer, FL_Clients]
         FL_Node -->> FL_Node: trigger event (system start) 
         FL_Node -->> CC_SDK: register_policy(node)
-        FL_Node -->> CC_Orchestrator: register_policy(node)
+        CC_SDK -->> CC_Orchestrator: register_policy(node)
     end     
     Note right of CC_Orchestrator: CC_Orchestrator has no knowledge of FLARE concepts
     CC_Orchestrator -->> CC_Orchestrator: check at least 1 node has policy 
