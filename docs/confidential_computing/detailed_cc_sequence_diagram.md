@@ -160,8 +160,6 @@ sequenceDiagram
         FL_Node -->> CC_SDK: register_policy(node)
         CC_SDK -->> CC_Orchestrator: register_policy(node)
     end     
-    Note right of CC_Orchestrator: CC_Orchestrator has no knowledge of FLARE concepts
-    CC_Orchestrator -->> CC_Orchestrator: check at least 1 node has policy 
     
 ```
 
