@@ -227,13 +227,10 @@ sequenceDiagram
     participant CC_SDK
     participant CC_Orchestrator
     
-    FL_Server -->> FL_Client: triggered by deploy app event
-    FL_Client -->> FL_Client: call CC prepare() 
-    FL_Client -->> CC_SDK: registration_node(FL_Client node)
-    CC_SDK -->> CC_Orchestrator: registration_node(FL_Client node)
-    FL_Client -->> CC_SDK: verify_evidence(FL_Client node)
-    CC_SDK -->> CC_Orchestrator: verify_evidence(FL_Client node)
-    
+    FL_Server -->> FL_Client: deploy app event
+    FL_Client -->> FL_Client: call CC attestation 
+    FL_Client -->> CC_SDK: attest(FL_Client node)
+   
 ```
 
 
