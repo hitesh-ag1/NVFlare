@@ -100,7 +100,6 @@ sequenceDiagram
     
     participant Request_Node
     participant CC_SDK
-    participant vTMP
     participant Attestation_Service
     Request_Node -->> CC_SDK: authenticate( participant token)
     CC_SDK -->> Attestation_Service: authenticate(participant token)
