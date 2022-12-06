@@ -194,7 +194,6 @@ sequenceDiagram
     participant FL_Job_Client
     participant FL_Server
     participant CC_SDK
-    participant CC_Orchestrator
     
     FL_Job_Client -->> FL_Server: submit Job
     FL_Server -->> FL_Server: call CC attestation 
@@ -211,14 +210,10 @@ sequenceDiagram
     participant FL_Job_Client
     participant FL_Overseer
     participant CC_SDK
-    participant CC_Orchestrator
     
-    FL_Job_Client -->> FL_Overseer: triggered by seach for SP connection
-    FL_Overseer -->> FL_Overseer: call CC prepare() 
-    FL_Overseer -->> CC_SDK: registration_node(FL_Overseer node)
-    CC_SDK -->> CC_Orchestrator: registration_node(FL_Overseer node)
-    FL_Overseer -->> CC_SDK: verify_evidence(FL_Overseer node)
-    CC_SDK -->> CC_Orchestrator: verify_evidence(FL_Overseer node)
+    FL_Job_Client -->> FL_Overseer: connection
+    FL_Overseer -->> FL_Overseer: call CC attestation 
+    FL_Overseer -->> CC_SDK: attest(FL_Overseer node)
     
 ```
 
