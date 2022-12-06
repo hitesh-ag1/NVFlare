@@ -179,7 +179,7 @@ sequenceDiagram
     participant CC_Orchestrator
     note right of FL_Node : all FL_Node preparements are done independently, not necessarily at the same time
     par for node in [ FL_Server(s), FL_Clients]
-        FL_Node -->> FL_Node: trigger event (system start) 
+        FL_Node -->> FL_Node: trigger event (system start, initial handshake) 
         FL_Node -->> CC_SDK: register_policy(node)
         CC_SDK -->> CC_Orchestrator: register_policy(node)
     end     
@@ -198,7 +198,7 @@ sequenceDiagram
 
     note right of FL_Node : all FL_Node attestation are done independently, not necessarily at the same time
     par for node in [ FL_Server(s), FL_Clients]
-        FL_Node -->> FL_Node: trigger event (system start)
+        FL_Node -->> FL_Node: trigger event (system start, initial handshake)
         note over FL_Node, CC_SDK: sdk.attest(node) 
         FL_Node -->> CC_SDK: attest(node)
         CC_SDK -->> FL_Node: Nonce
