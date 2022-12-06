@@ -124,11 +124,13 @@ sequenceDiagram
     CC_Orchestrator -->> CC_SDK : participant tokens 
     CC_SDK -->> Node :  participant tokens 
     loop all participant tokens
-        Node -->> CC_SDK : check_authentication(participate token) -- check participant token authenticity 
-        Node -->>  CC_SDK: verify_claim  ( what's the arguments (?) )
-        CC_SDK -->> Attestation_Service : verify_claim
-        Attestation_Service -->> CC_SDK : verify_claim result
-        CC_SDK -->> Node : verify_claim result
+        Node -->> CC_SDK : check_authentication(participate token) (details omitted) -- check participant token authenticity
+        CC_SDK -->> Node : authentication result
+        alt if authenticated
+            Node -->>  CC_SDK: verify_claim  ( what's the arguments (?) )
+            CC_SDK -->> Attestation_Service : verify_claim
+            Attestation_Service -->> CC_SDK : verify_claim result
+            CC_SDK -->> Node : verify_claim result
     end
     Node -->> Node : make decision for participants
 ```
