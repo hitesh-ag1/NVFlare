@@ -40,7 +40,7 @@ sequenceDiagram
 Every Node needs to attest for itself.
 
 ### Local Attestation
-* 
+
 * Node registration_node()
 
 ```mermaid
