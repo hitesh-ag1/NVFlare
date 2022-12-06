@@ -329,7 +329,6 @@ sequenceDiagram
     
     participant Flare_Job_Client
     participant Flare_Server
-    participant Flare_Client
     participant CC_SDK
     
     Flare_Job_Client -->> Flare_Server: submit job
