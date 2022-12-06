@@ -39,8 +39,6 @@ sequenceDiagram
 
 Every Node needs to attest for itself.
 
-Node here represent each node (FL Server, FL Client, FL Overseer).
-
 ### Local Attestation
 * 
 * Node registration_node()
