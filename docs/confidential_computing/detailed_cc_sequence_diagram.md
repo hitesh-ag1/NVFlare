@@ -131,6 +131,7 @@ sequenceDiagram
             CC_SDK -->> Attestation_Service : verify_claim
             Attestation_Service -->> CC_SDK : verify_claim result
             CC_SDK -->> Node : verify_claim result
+        end
     end
     Node -->> Node : make decision for participants
 ```
