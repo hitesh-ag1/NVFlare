@@ -95,6 +95,8 @@ class TBAnalyticsReceiver(AnalyticsReceiver):
             func(tag_name, v, **analytic_data.kwargs)
         else:
             func(tag_name, v)
+        for writer in self.writers_table.values():
+            writer.flush()
 
     def finalize(self, fl_ctx: FLContext):
         for writer in self.writers_table.values():
